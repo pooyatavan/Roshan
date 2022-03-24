@@ -1,0 +1,95 @@
+.content-panel {
+    position: fixed;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    background: none;
+    padding-top: 42px;
+}
+
+.tab {
+    overflow: hidden;
+    background-color: #272727;
+    text-align:center;
+}
+
+.tab button {
+    background-color: inherit;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+    width: auto;
+    border-bottom: 3px solid transparent;
+    color: rgb(226, 226, 226);
+    font-size: 12px;
+}
+
+.tab button:hover {
+    background-color: rgb(32, 32, 32);
+}
+
+.tab button.active {
+    border-bottom: 3px solid #FFFFFF;
+    color: #E1FBFF;
+}
+
+.tabcontent {
+    width: 100%;
+    display: none;
+    padding: 200px 12px;
+    border: 1px solid #ccc;
+    border-top: none;
+    background-color: #EEEEEE;
+    height: 100%;
+}
+
+.right_section {
+    float: left;
+    width: 50%;
+}
+
+.left_section {
+    width: 49%;
+    float: right;
+    height: 400px;
+}
+
+select {
+    margin: 0px auto;
+    display: inline-block;
+    border: 1 solid #000000;
+    color: black;
+    font-size: 15px;
+    width: 400px;
+    height: 40px;;
+    transition: 0.3s;
+    background-color: #eaeef0;
+    display: block;
+    margin: 30px auto;
+}
+
+input[type="text"]{
+    display: block;
+    margin: 30px auto;
+    text-align: left;
+    padding: 10px 10px;
+    width: 400px;
+    height: 50px;
+    color: black;
+    transition: 0.25s;
+    font-size: 15px;
+    font-family: regular;
+    background: transparent;
+    background-color: #f4f8f8;
+    border: 1px solid #000000;
+}
+
+@media screen and (max-device-width: 1400px) {
+    .tabcontent {
+        padding: 70px 12px;
+    }
+
+
+}
