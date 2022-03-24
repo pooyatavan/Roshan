@@ -1,0 +1,21 @@
+<html>
+<head>
+    <title>Roshan - Login</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" media="all" href="{{ url_for('static', filename='css/style.css')}}">
+</head>
+<body>
+            <div class="login">
+                <div class="header"><p>ROSHAN</p><p>™</p></div>
+                <form action="" method="post">
+                    <input type="text" name="username" placeholder="Username" value="{{ request.form.username }}">
+                    <input type="password" name="password" placeholder="Password" value="{{ request.form.password }}">
+                    <input type="submit" value="Sign In">
+                    </form>
+                {% if error %}
+                <div class="error_login"><a>{{ error }}</a></div>
+                {% endif %}
+
+        </div>
+</body>
+</html>

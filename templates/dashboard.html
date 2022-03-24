@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+{% block content %}
+<title>Roshan - Dashboard</title>
+<div class="dashboard">
+    <div class="all_devices">
+        <div class="title"><a>SUMMERY</a></div>
+  <table style="width:400px">
+  <tr>
+    <th>Devices</th>
+    <th>Towers</th>
+  </tr>
+  <tr>
+    <td><div class="line"><a>{{ all_devices }}</a></div></td>
+    <td><div class="line"><a>{{ all_towers }}</a></div></td>
+  </tr>
+</table>
+    </div>
+
+    <div class="currency">
+        <div class="title"><a>Currency</a></div>
+
+          <table class="table">
+  <tr>
+    <th>$</th>
+  </tr>
+  <tr>
+    <td><div class="line"><a>{{currency_number}}R</a></div></td>
+  </tr>
+</table>
+    </div>
+</div>
+{% endblock content %}
