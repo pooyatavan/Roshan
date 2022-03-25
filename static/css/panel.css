@@ -64,10 +64,52 @@ select {
     font-size: 15px;
     width: 400px;
     height: 40px;;
-    transition: 0.3s;
     background-color: #eaeef0;
     display: block;
     margin: 30px auto;
+}
+
+.panel {
+    top: 40px;
+    width: 100%;
+    height: 59px;
+    position: fixed;
+    background-color: #fbfbfd;
+    z-index: 2;
+}
+
+.tools {
+    color: white;
+    text-align: center;
+}
+
+.tools a {
+    font-family: regular;
+}
+
+.move_select {
+    margin: 0px auto;
+    display: inline-block;
+    border: 1 solid #000000;
+    color: black;
+    font-size: 15px;
+    width: 250px;
+    height: 45px;;
+    background-color: #eaeef0;
+}
+
+.btn {
+    width: auto;
+    display: inline-block;
+    margin: 0px auto;
+    text-align: center;
+    padding: 14px 20px;
+    color: black;
+    cursor: pointer;
+    border: 1px solid #d2d6d8;
+    background-color: #eaeef0;
+    text-transform: uppercase;
+    font-family: regular;
 }
 
 input[type="text"]{
