@@ -3,6 +3,15 @@
 <title>Roshan - Move</title>
 <style>
 .draggable {cursor:move;}
+
+#containment-wrapper-move {
+    position: absolute;
+    overflow-x: hidden;
+    width: 100%;
+    height: 150%;
+    top: 75px;
+}
+
 </style>
 
 <script type=text/javascript>
@@ -76,7 +85,7 @@ function screen() {
     $.getJSON($SCRIPT_ROOT + '/_stuff',
     function(data) {
         for (i = 0; i < data.alldata[2].length; i++) {
-            document.getElementById('containment-wrapper').innerHTML += '<div id="' + data.alldata[2][j].id + '" class="draggable ui-draggable" data-left="20px" data-top="20px" style="position: absolute; left:' + data.alldata[2][j].left + '; top:' + data.alldata[2][j].top + '"><div class="left"><div class="left_top"><a>' + data.alldata[2][j].tower_name + '</a><br></div></br><div class="left_down" id="ups' + data.alldata[2][j].tower_name + '"></div></div><div class="right" id="' + data.alldata[2][j].tower_name + '"></div></div>';
+            document.getElementById('containment-wrapper-move').innerHTML += '<div id="' + data.alldata[2][j].id + '" class="draggable ui-draggable" data-left="20px" data-top="20px" style="position: absolute; left:' + data.alldata[2][j].left + '; top:' + data.alldata[2][j].top + '"><div class="left"><div class="left_top"><a>' + data.alldata[2][j].tower_name + '</a><br></div></br><div class="left_down" id="ups' + data.alldata[2][j].tower_name + '"></div></div><div class="right" id="' + data.alldata[2][j].tower_name + '"></div></div>';
             document.getElementById('mySelect').innerHTML += '<option value="' + data.alldata[2][j].id + '">' + data.alldata[2][j].tower_name + '</option>';
             j = j + 1;
         }
@@ -121,16 +130,15 @@ while (true) {
 
 $(document).on("ready", function(){
     $(".draggable").draggable({
-        containment: "#containment-wrapper"
+        containment: "#containment-wrapper-move"
     });
 })
 </script>
 
-
 <div class="panel">
 <div class="tools">
     <form action="" method="post">
-        <select id="mySelect"></select>
+        <select class="move_select" id="mySelect"></select>
         <button class="btn" type="button" onclick="move()">Move</button>
         <button class="btn" onclick="save()">Save</button>
     </form>
@@ -138,7 +146,7 @@ $(document).on("ready", function(){
 </div>
 
 <body onload="screen()">
-<div id="containment-wrapper">
+<div id="containment-wrapper-move">
 </div>
 </body>
 {% endblock content %}
