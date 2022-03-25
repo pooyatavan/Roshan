@@ -22,7 +22,7 @@ username = ""
 all_devices = 0
 currency_number = []
 
-all_data = import_from_sql.return_import()
+all_data, users = import_from_sql.return_import()
 
 # Create tower
 def create_tower(add_tower_name):
@@ -177,16 +177,16 @@ def flask():
     @app.route("/", methods=['GET', 'POST'], )
     @app.route('/login', methods=['GET', 'POST'])
     def login():
-        global username
         error = None
         if request.method == 'POST':
             username = request.form['username']
             password = request.form['password']
-            if User_LRCHR.user_login(all_data, username, password) == True:
+            login_result = User_LRCHR.user_login(users, username, password)
+            if login_result == False:
+                error = 'You have entered an invalid username or password'
+            else:
                 session["username"] = username
                 return redirect(url_for('solar'))
-            else:
-                error = 'You have entered an invalid username or password'
         else:
             if "username" in session:
                 return redirect(url_for('solar'))
@@ -216,7 +216,7 @@ def flask():
             username = session["username"]
             username_ch = session["username"]
             # check username rank for access this page
-            if User_LRCHR.check_rank(username_ch, all_data) == True:
+            if User_LRCHR.check_rank(username_ch, users) == True:
                 return render_template('move.html', username=username)
             else:
                 return render_template('denied.html', username=username)
@@ -341,6 +341,7 @@ def flask():
                     error = "done"
                     add_brand(radio_type)
                     return render_template('add.html', error=error, all_data=all_data, username=username)
+
             # Register user
             if request.form['submit'] == 'REGISTER':
                 rank = request.form['rank']
@@ -352,8 +353,8 @@ def flask():
                     error = "one of the field are empty"
                     return render_template('add.html', error=error, all_data=all_data, username=username)
                 else:
-                    error, refresh_users_list = User_LRCHR.user_check(rank, firstname, lastname, new_username, new_password, all_data, conn)
-                    all_data[1] = refresh_users_list
+                    error, refresh_users_list = User_LRCHR.user_check(rank, firstname, lastname, new_username, new_password, users, conn)
+                    users = refresh_users_list
                     return render_template('add.html', error=error, all_data=all_data, username=username)
 
         else:
@@ -361,7 +362,7 @@ def flask():
                 username = session["username"] = session["username"]
                 username_ch = session["username"]
                 # check username rank for access this page
-                if User_LRCHR.check_rank(username_ch, all_data) == True:
+                if User_LRCHR.check_rank(username_ch, users) == True:
                     return render_template('add.html', username=username, all_data=all_data, error=error)
                 else:
                     return render_template('denied.html', username=username)
