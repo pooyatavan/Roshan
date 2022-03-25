@@ -8,46 +8,32 @@ def register(rank, firstname, lastname, new_username, new_password, conn):
     conn.commit()
 
 # check username exist before register
-def user_check(rank, firstname, lastname, new_username, new_password, all_data, conn):
-    counter = 0
-    while True:
-        if len(all_data[1]) == counter:
-            register(rank, firstname, lastname, new_username, new_password, conn)
-            error = "user registered successfully"
-            refresh_users_list = import_from_sql.import_users()
-            return error, refresh_users_list
-        else:
-            if new_username == all_data[1][counter]['username'] == new_username:
-                error = f"{new_username} is allready exist"
-                return error
-            else:
-                counter = counter + 1
-
+def user_check(rank, firstname, lastname, new_username, new_password, users, conn):
+    if new_username in users:
+        error = f"{new_username} is allready exist"
+        return error
+    else:
+        register(rank, firstname, lastname, new_username, new_password, conn)
+        error = "user registered successfully"
+        refresh_users_list = import_from_sql.import_users()
+        return error, refresh_users_list
+        
 # check rank for user
-def check_rank(username, all_data):
-    user_check_counter = 0
-    while True:
-        if len(all_data[1]) >= user_check_counter:
-            if all_data[1][user_check_counter]['username'] == username:
-                if all_data[1][user_check_counter]['rank'] == "3":
-                    return True
-                else:
-                    return False
-            else:
-                user_check_counter = user_check_counter + 1
+def check_rank(username, users):
+    if username in users:
+        user = users[username]
+        if not "3" == user['rank']:
+            return False
         else:
-            break
+            return True
 
 # user login
-def user_login(all_data, username, password):
-    user_check_counter = 0
-    while True:
-        if len(all_data[1]) > user_check_counter:
-            if all_data[1][user_check_counter]['username'] == username:
-                if all_data[1][user_check_counter]['password'] == password:
-                    return True
-                break
-            else:
-                user_check_counter = user_check_counter + 1
-        else:
+def user_login(users, username, password):
+    if username not in users:
+        return False
+    else:
+        user = users[username]
+        if not password == user["password"]:
             return False
+        else:
+            return True
