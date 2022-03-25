@@ -5,19 +5,14 @@ conn = pyodbc.connect("Driver={SQL Server};" "Server=DESKTOP-APD1VGA;" "Database
 cursor = conn.cursor()
 
 all_data = [[], [], [], [], []]
-# [devices] - [users] - [Towers] - [type] - [ips]
+# [devices] - [empty] - [Towers] - [type] - [ips]
+users = {}
 
 def import_devices():
     cursor.execute('SELECT * FROM solar')
     for row in cursor:
         # make dictionary from all data
-        all_data[0].append(
-            {'id': row[0],
-             'tower_name': row[1],
-             'ap_name': row[2],
-             'ip': row[3], 'ping': "",
-             'ptp': row[4],
-             'models': row[5]})
+        all_data[0].append({'id': row[0], 'tower_name': row[1], 'ap_name': row[2], 'ip': row[3], 'ping': "", 'ptp': row[4], 'models': row[5]})
         all_data[4].insert(0, row[3])
 
 def import_towers():
@@ -28,8 +23,8 @@ def import_towers():
 def import_users():
     cursor.execute('SELECT * FROM users')
     for row in cursor:
-        all_data[1].append({'id': row[0], 'rank': row[1], 'username': row[2], 'password': row[3]})
-    return all_data[1]
+        users[row[2]] = {'id': row[0], 'rank': row[1], 'username': row[2], 'password': row[3]}
+    return users
 
 def import_types():
     cursor.execute('SELECT * FROM type')
@@ -43,4 +38,4 @@ def return_import():
     import_towers()
     log = logging.getLogger('werkzeug')
     log.setLevel(logging.ERROR)
-    return all_data
+    return all_data, users
