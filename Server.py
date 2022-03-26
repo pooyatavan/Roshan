@@ -5,11 +5,7 @@ from pythonping import ping
 import time
 import threading
 from waitress import serve
-from scripts import import_from_sql
-from scripts import RPR
-from scripts import SD
-from scripts import UR
-from scripts import User_LRCHR
+from scripts import import_from_sql, log, RPR, User_LRCHR, panel, sort_data_by_name
 
 pool = ThreadPool(3)
 conn = pyodbc.connect("Driver={SQL Server};" "Server=DESKTOP-APD1VGA;" "Database=solar;" "Trusted_connection=yes;")
@@ -24,109 +20,6 @@ currency_number = []
 
 all_data, users = import_from_sql.return_import()
 
-# Create tower
-def create_tower(add_tower_name):
-    check = []
-    h = 0
-    q = 1
-    while True:
-        if len(all_data[2]) == h:
-            break
-        else:
-            check.append(all_data[2][h].get('id'))
-            h = h + 1
-    while True:
-        if q not in check:
-            cursor = conn.cursor() 
-            cursor.execute('SELECT * FROM tower_name')
-            cursor.execute(f" insert into tower_name(id, tower_name, top_pos, left_pos) values ('{q}', '{str(add_tower_name)}', '200px', '200px')")
-            conn.commit()
-            update_towers()
-            break
-        else:
-            q = q + 1
-
-# Add radio to list
-def add_radio():
-    global stop
-    stop = True
-    check = []
-    h = 0
-    q = 0
-    global add_temp
-    while True:
-        if len(all_data[0]) == h:
-            break
-        else:
-            check.append(all_data[0][h].get('id'))
-            h = h + 1
-    while True:
-        if q not in check:
-            cursor = conn.cursor()
-            cursor.execute('SELECT * FROM solar')
-            cursor.execute(f" insert into solar(id, name, access_point, ip, ptp, models) values ('{q}' "
-                           f",'{add_temp[0].get('tower_name')}',"
-                           f" '{add_temp[0].get('radio_name')}',"
-                           f" '{add_temp[0].get('radio_ip')}',"
-                           f" '{add_temp[0].get('mode')}',"
-                           f" '{add_temp[0].get('models')}')")
-            conn.commit()
-            add_temp = []
-            stop = False
-            UR.update_radios(all_data, conn)
-            break
-        else:
-            q = q + 1
-
-# Delete tower
-def delete_tower(delete_tower_name):
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM tower_name')
-    cursor.execute(f"DELETE FROM tower_name WHERE [tower_name] in ('{delete_tower_name}')")
-    conn.commit()
-    update_towers()
-
-# Edit tower name
-def edit_tower_name(target, new):
-    global stop
-    stop = True
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM solar')
-    cursor.execute(f"UPDATE tower_name SET tower_name = '{new}' WHERE tower_name = ('{target}')")
-    cursor.execute(f"UPDATE solar SET name = '{new}' WHERE name = ('{target}')")
-    conn.commit()
-    update_towers()
-    stop = False
-    UR.update_radios(all_data, conn)
-
-# Update tower position
-def update_tower_position(data):
-    u = 0
-    p = 1
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM tower_name')
-    while True:
-        if len(data) == u:
-            data = []
-            update_towers()
-            break
-        else:
-            cursor.execute(f" UPDATE tower_name SET top_pos = '{data[u].get('top')}',"
-                           f" left_pos = '{data[u].get('left')}' WHERE Id = {str(p)} ")
-            p = p + 1
-            u = u + 1
-            conn.commit()
-
-# Update towers list
-def update_towers():
-    temp = []
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM tower_name')
-    for row in cursor:
-        temp.append({'id': row[0], 'tower_name': row[1], 'top': row[2], 'left': row[3]})
-    all_data[2] = []
-    all_data[2] = temp
-
 # Ping calc
 def ping_system(ip):
     if stop is False:
@@ -136,41 +29,18 @@ def ping_system(ip):
         else:
             ping_data.append({'ip': ip, 'ping': result.rtt_avg_ms})
 
-# Edit radio name
-def edit_radio_name(new, target):
-    global stop
-    stop = True
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM solar')
-    cursor.execute(f"UPDATE solar SET access_point = '{new}' WHERE access_point = ('{target}')")
-    conn.commit()
-    update_towers()
-    stop = False
-    all_data = UR.update_radios(all_data, conn)
-
-# Add brand
-def add_brand(brand_name):
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM type')
-    cursor.execute(f" insert into type(type) values ('{brand_name}')")
-    all_data[3] = []
-    cursor.execute('SELECT * FROM type')
-    for row in cursor:
-        all_data[3].append(row[1])
-    conn.commit()
 
 # start flask server
 def flask():
     app = Flask(__name__, static_folder='static', template_folder='templates')
     app.secret_key = "hi"
-
     # Data pass through
     @app.route('/_stuff', methods=['GET', 'Post'])
     def stuff():
         if request.method == 'POST':
             data = []
             data = request.get_json()
-            update_tower_position(data)
+            panel.update_tower_position(data, conn, all_data)
         return jsonify(alldata=all_data)
 
     # Login
@@ -229,10 +99,20 @@ def flask():
         global username
         global all_devices
         if "username" in session:
+            print(users)
             username = session["username"]
             all_devices = len(all_data[0])
             all_towers =  len(all_data[2])
             return render_template('dashboard.html', username=username, all_devices=all_devices, all_towers=all_towers, currency_number=currency_number)
+        else:
+            return redirect(url_for('login'))
+
+    # Log
+    @app.route("/log", methods=['POST', 'GET'])
+    def log():
+        if "username" in session:
+            username = session["username"]
+            return render_template('log.html', username=username)
         else:
             return redirect(url_for('login'))
 
@@ -249,34 +129,22 @@ def flask():
                     error = 'Empty - Choose a name for your tower'
                     return render_template('add.html', error=error, all_data=all_data, username=username)
                 else:
-                    i = 0
-                    while len(all_data[2]) > i:
-                        if all_data[2][i]['tower_name'] == tower_name:
-                            error = f'{tower_name} is all ready exist'
-                            return render_template('add.html', error=error, all_data=all_data, username=username)
-                        else:
-                            i = i + 1
-                    if i == len(all_data[2]):
-                        create_tower(tower_name)
-                        error = f'{tower_name} added successfully'
-                        return render_template('add.html', error=error, all_data=all_data, username=username)
+                    error = panel.check_tower_name(all_data, tower_name, conn)
+                    return render_template('add.html', error=error, all_data=all_data, username=username)
 
             # Add radio
-            if request.form['submit'] == 'Add Radio':
+            if request.form['submit'] == 'ADD DEVICE':
                 radio_name = request.form['radio_name']
                 radio_ip = request.form['radio_ip']
-                tower_name = request.form['tower_name']
+                to_tower = request.form['tower_name']
                 mode = request.form['mode']
                 models = request.form['models']
-                if "" in (radio_name, radio_ip, tower_name, mode, models):
+                if "" in (radio_name, radio_ip, to_tower, mode, models):
                     error = 'One of these fields are empty'
                     return render_template('add.html', error=error, all_data=all_data, username=username)
                 else:
-                    add_temp.append(
-                        {'tower_name': tower_name, 'radio_name': radio_name, 'radio_ip': radio_ip, 'mode': mode,
-                         'models': models})
-                    add_radio()
-                    error = f'{radio_name} in tower {tower_name} with ip {radio_ip} added successfully'
+                    panel.add_radio(radio_name, radio_ip, to_tower, mode, models, conn, all_data)
+                    error = f'{radio_name} in tower {to_tower} with ip {radio_ip} added successfully'
                     return render_template('add.html', error=error, all_data=all_data, username=username)
 
             # delete tower name
@@ -288,7 +156,7 @@ def flask():
                     return render_template('add.html', error=error, all_data=all_data, username=username)
                 else:
                     error = f"{delete_tower_name} Successfully deleted"
-                    delete_tower(delete_tower_name)
+                    panel.delete_tower(delete_tower_name, conn, all_data)
                     return render_template('add.html', error=error, all_data=all_data, username=username)
 
             # Edit tower name
@@ -308,7 +176,7 @@ def flask():
                             i = i + 1
                     if i == len(all_data[2]):
                         error = f"Successfully changed from {target_tower_name} to {new_tower_name}"
-                        edit_tower_name(target_tower_name, new_tower_name)
+                        panel.edit_tower_name(target_tower_name, new_tower_name, conn, all_data)
                         return render_template('add.html', error=error, all_data=all_data, username=username)
 
             # Edit device name
@@ -328,7 +196,7 @@ def flask():
                             i = i + 1
                     if i == len(all_data[0]):
                         error = f"Successfully changed from {target_radio_name} to {new_radio_name}"
-                        edit_radio_name(new_radio_name, target_radio_name)
+                        panel.edit_radio_name(new_radio_name, target_radio_name, conn, all_data)
                         return render_template('add.html', error=error, all_data=all_data, username=username)
 
             # Add brand
@@ -339,7 +207,19 @@ def flask():
                     return render_template('add.html', error=error, all_data=all_data, username=username)
                 else:
                     error = "done"
-                    add_brand(radio_type)
+                    panel.add_brand(radio_type, all_data, conn)
+                    return render_template('add.html', error=error, all_data=all_data, username=username)
+
+            # delete device name
+            if request.form['submit'] == 'Delete device name':
+                delete_device_name = ""
+                delete_device_name = request.form['target_device_name']
+                if "None" in delete_device_name:
+                    error = "Choose a tower"
+                    return render_template('add.html', error=error, all_data=all_data, username=username)
+                else:
+                    error = f"{delete_device_name} Successfully deleted"
+                    panel.delete_device(delete_device_name, conn, all_data)
                     return render_template('add.html', error=error, all_data=all_data, username=username)
 
             # Register user
@@ -350,20 +230,19 @@ def flask():
                 new_username = request.form['new_username']
                 new_password = request.form['new_password']
                 if firstname == "" or lastname == "" or new_username == "" or new_password == "":
-                    error = "one of the field are empty"
+                    error = "one of the fields are empty"
                     return render_template('add.html', error=error, all_data=all_data, username=username)
                 else:
-                    error, refresh_users_list = User_LRCHR.user_check(rank, firstname, lastname, new_username, new_password, users, conn)
-                    users = refresh_users_list
+                    error = User_LRCHR.user_check(rank, firstname, lastname, new_username, new_password, users, conn)
                     return render_template('add.html', error=error, all_data=all_data, username=username)
 
         else:
             if "username" in session:
-                username = session["username"] = session["username"]
+                username = session["username"]
                 username_ch = session["username"]
                 # check username rank for access this page
                 if User_LRCHR.check_rank(username_ch, users) == True:
-                    return render_template('add.html', username=username, all_data=all_data, error=error)
+                    return render_template('add.html', username=username, all_data=all_data)
                 else:
                     return render_template('denied.html', username=username)
             else:
@@ -382,6 +261,6 @@ while True:
     time.sleep(time_refresh)
     results = pool.map(ping_system, all_data[4])
     all_data[0] = RPR.replace(stop, ping_data, all_data)
-    all_data[0] = SD.sort_data(all_data)
+    all_data[0] = sort_data_by_name.sort_data(all_data)
     ping_data.clear()
     # currency()
