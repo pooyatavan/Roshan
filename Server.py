@@ -99,7 +99,6 @@ def flask():
         global username
         global all_devices
         if "username" in session:
-            print(users)
             username = session["username"]
             all_devices = len(all_data[0])
             all_towers =  len(all_data[2])
@@ -112,7 +111,7 @@ def flask():
     def log():
         if "username" in session:
             username = session["username"]
-            return render_template('log.html', username=username)
+            return render_template('log.html', username=username, all_data=all_data[1])
         else:
             return redirect(url_for('login'))
 
