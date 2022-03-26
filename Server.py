@@ -5,7 +5,7 @@ from pythonping import ping
 import time
 import threading
 from waitress import serve
-from scripts import import_from_sql, log, RPR, User_LRCHR, panel, sort_data_by_name
+from scripts import import_from_sql, ip_check, RPR, User_LRCHR, panel, sort_data_by_name
 
 pool = ThreadPool(3)
 conn = pyodbc.connect("Driver={SQL Server};" "Server=DESKTOP-APD1VGA;" "Database=solar;" "Trusted_connection=yes;")
@@ -142,9 +142,13 @@ def flask():
                     error = 'One of these fields are empty'
                     return render_template('add.html', error=error, all_data=all_data, username=username)
                 else:
-                    panel.add_radio(radio_name, radio_ip, to_tower, mode, models, conn, all_data)
-                    error = f'{radio_name} in tower {to_tower} with ip {radio_ip} added successfully'
-                    return render_template('add.html', error=error, all_data=all_data, username=username)
+                    if ip_check.ip_format_check(radio_ip) == True:
+                        panel.add_radio(radio_name, radio_ip, to_tower, mode, models, conn, all_data)
+                        error = f'{radio_name} in tower {to_tower} with ip {radio_ip} added successfully'
+                        return render_template('add.html', error=error, all_data=all_data, username=username)
+                    else:
+                        error = f'ip {radio_ip} is incorect'
+                        return render_template('add.html', error=error, all_data=all_data, username=username)
 
             # delete tower name
             if request.form['submit'] == 'Delete Tower':
