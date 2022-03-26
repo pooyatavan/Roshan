@@ -1,3 +1,5 @@
+from scripts import log
+
 # Update towers list
 def update_towers(all_data, conn):
     temp = []
@@ -27,6 +29,8 @@ def create_tower(add_tower_name, conn, all_data):
             cursor.execute(f" insert into tower_name(id, tower_name, top_pos, left_pos) values ('{q}', '{str(add_tower_name)}', '200px', '200px')")
             conn.commit()
             update_towers(all_data, conn)
+            event = f"Tower {add_tower_name} was added"
+            log.in_to_the_log(conn, event)
             break
         else:
             q = q + 1
@@ -88,6 +92,8 @@ def delete_device(delete_device_name, conn, all_data):
     cursor.execute(f"DELETE FROM solar WHERE [access_point] in ('{delete_device_name}')")
     conn.commit()
     update_radios(all_data, conn)
+    event = f"Device {delete_device_name} was deleted"
+    log.in_to_the_log(conn, event)
 
 # Edit tower name
 def edit_tower_name(target_tower_name, new_tower_name, conn, all_data):
@@ -98,6 +104,8 @@ def edit_tower_name(target_tower_name, new_tower_name, conn, all_data):
     conn.commit()
     update_towers(all_data, conn)
     update_radios(all_data, conn)
+    event = f"Tower name from {target_tower_name} to {new_tower_name} has changed"
+    log.in_to_the_log(conn, event)
 
 # Add radio
 def add_radio(radio_name, radio_ip, to_tower, mode, models, conn, all_data):
@@ -118,6 +126,8 @@ def add_radio(radio_name, radio_ip, to_tower, mode, models, conn, all_data):
             cursor.execute(f" insert into solar(id, name, access_point, ip, ptp, models) values ('{q}', '{to_tower}', '{radio_name}', '{radio_ip}', '{mode}', '{models}')")
             conn.commit()
             update_radios(all_data, conn)
+            event = f"Device {radio_name} added"
+            log.in_to_the_log(conn, event)
             break
         else:
             q = q + 1
@@ -129,6 +139,8 @@ def delete_tower(delete_tower_name, conn, all_data):
     cursor.execute(f"DELETE FROM tower_name WHERE [tower_name] in ('{delete_tower_name}')")
     conn.commit()
     update_towers(all_data, conn)
+    event = f"Tower {delete_tower_name} deleted"
+    log.in_to_the_log(conn, event)
 
 # Add brand
 def add_brand(brand_name, all_data, conn):
@@ -140,6 +152,8 @@ def add_brand(brand_name, all_data, conn):
     for row in cursor:
         all_data[3].append(row[1])
     conn.commit()
+    event = f"Radio model {brand_name} added"
+    log.in_to_the_log(conn, event)
 
 # Edit radio name
 def edit_radio_name(new_radio_name, target_radio_name, conn, all_data):
@@ -150,3 +164,5 @@ def edit_radio_name(new_radio_name, target_radio_name, conn, all_data):
     cursor.execute(f"UPDATE solar SET access_point = '{new_radio_name}' WHERE access_point = ('{target_radio_name}')")
     conn.commit()
     update_radios(all_data, conn)
+    event = f"Radio name changed from {target_radio_name} to {new_radio_name} "
+    log.in_to_the_log(conn, event)
