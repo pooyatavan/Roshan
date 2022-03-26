@@ -15,6 +15,7 @@ body {
     font-family: regular;
     overflow-x: hidden;
     background-color: #eaeef0;
+    -webkit-font-smoothing: antialiased;
 }
 
 header {
@@ -73,11 +74,6 @@ header {
     color: white;
     border: none;
     padding: 9px 25px;
-}
-
-.cta li {
-    display: inline-block;
-    padding: 0px 20px;
 }
 
 .cta a {
@@ -539,3 +535,52 @@ th {
 h1 {
     margin: 40px 0 20px;
 }
+
+/* Log */
+.log {
+    width: 100%;
+    position: relative;
+    top: 50px;
+}
+
+.table-wrapper{
+    margin: 10px 70px 70px;
+}
+
+.fl-table {
+    border-radius: 5px;
+    font-size: 12px;
+    border: none;
+    border-collapse: collapse;
+    width: 100%;
+    max-width: 100%;
+    background-color: white;
+}
+
+.fl-table td, .fl-table th {
+    text-align: left;
+    padding: 8px;
+}
+
+.fl-table td {
+    border-right: 1px solid #f8f8f8;
+    font-size: 12px;
+}
+
+.fl-table thead th {
+    color: #ffffff;
+    background-color: #272727;
+    font-family: bold;
+}
+
+.fl-table thead th:nth-child(odd) {
+    color: #ffffff;
+    background-color: #272727;
+    border-right: 1px #e7e7e7 solid;
+    width: 300px;
+}
+
+.fl-table tr:nth-child(even) {
+    background: #F8F8F8;
+}
+/* Log */
