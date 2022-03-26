@@ -7,3 +7,9 @@ Issues can be reported via the Github issue tracker. Please take the time to rev
 In addition, thoroughly read through the issue tracker guide to ensure your report contains the required information. Incorrect or poorly formed reports are wasteful and are subject to deletion.
 # Submitting fixes
 Fixes are submitted as pull requests via Github.
+# In progress
+SSH (mikrotik, UBNT)
+Log
+SQL
+Report from Towers (exel)
+Add to SLQ from list
