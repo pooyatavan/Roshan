@@ -24,13 +24,13 @@ def import_users():
     cursor.execute('SELECT * FROM users')
     for row in cursor:
         users[row[2]] = {'id': row[0], 'rank': row[1], 'username': row[2], 'password': row[3]}
-    return users
+    
 
 def import_types():
     cursor.execute('SELECT * FROM type')
     for row in cursor:
         all_data[3].append(row[1])
-
+ 
 def return_import():
     import_devices()
     import_users()
