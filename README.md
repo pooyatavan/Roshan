@@ -8,8 +8,4 @@ In addition, thoroughly read through the issue tracker guide to ensure your repo
 # Submitting fixes
 Fixes are submitted as pull requests via Github.
 # In progress
-SSH (mikrotik, UBNT)
-Log
-SQL
-Report from Towers (exel)
-Add to SLQ from list
+SSH (mikrotik, UBNT), Log, SQL, Report from Towers (exel), Add to SLQ from list
