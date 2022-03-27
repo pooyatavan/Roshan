@@ -3,15 +3,6 @@
 <title>Roshan - Move</title>
 <style>
 .draggable {cursor:move;}
-
-#containment-wrapper-move {
-    position: absolute;
-    overflow-x: hidden;
-    width: 100%;
-    height: 150%;
-    top: 75px;
-}
-
 </style>
 
 <script type=text/javascript>
@@ -41,28 +32,28 @@ function update_values() {
                 }
                 if (x[j].id == data.alldata[0][i].tower_name) {
                     if (data.alldata[0][i].ptp == "0") {
-                        document.getElementById(x[j].id).innerHTML += '<div class="nodes"><i class="fa fa-circle"></i><div class="tooltip">' + data.alldata[0][i].ap_name + '<span class="tooltiptext" style="top: -17px;">APN: ' + data.alldata[0][i].ap_name + ' </br> Ping: ' + data.alldata[0][i].ping + '</br> IP: ' + data.alldata[0][i].ip + '</span></div></div>';
+                        document.getElementById(x[j].id).innerHTML += '<div class="nodes"><i class="fa fa-circle"></i><div class="tooltip">' + data.alldata[0][i].ap_name + '</div></div>';
                         i++;
                     }
                     if (data.alldata[0][i].ptp == "1") {
-                        document.getElementById(x[j].id).innerHTML += '<div class="nodes"><i class="fa fa-compress"></i><div class="tooltip">' + data.alldata[0][i].ap_name + '<span class="tooltiptext" style="top: -17px;">APN: ' + data.alldata[0][i].ap_name + ' </br> Ping: ' + data.alldata[0][i].ping + '</br> IP: ' + data.alldata[0][i].ip + '</span></div></div>';
+                        document.getElementById(x[j].id).innerHTML += '<div class="nodes"><i class="fa fa-compress"></i><div class="tooltip">' + data.alldata[0][i].ap_name + '</div></div>';
                         i++;
                     }
                     if (data.alldata[0][i].ptp == "4") {
                         if ("ups" + data.alldata[0][i].tower_name == t[j].id) {
-                            document.getElementById(t[j].id).innerHTML += '<div class="tooltip"><i class="fa fa-link" aria-hidden="true"></i><span class="tooltiptext" style="top: 5px; left: 20px;"></span></div></br>';
+                            document.getElementById(t[j].id).innerHTML += '<div class="tooltip"><i class="fa fa-link" aria-hidden="true"></i></div></br>';
                             i++;
                         }
                     }
                     if (data.alldata[0][i].ptp == "3") {
                         if ("ups" + data.alldata[0][i].tower_name == t[j].id) {
-                            document.getElementById(t[j].id).innerHTML += '<div class="tooltip"><i class="fa fa-arrows-alt" aria-hidden="true"></i><span class="tooltiptext" style="top: 5px; left: 20px;"></span></div></br>';
+                            document.getElementById(t[j].id).innerHTML += '<div class="tooltip"><i class="fa fa-arrows-alt" aria-hidden="true"></i></div></br>';
                             i++;
                         }
                     }
                     if (data.alldata[0][i].ptp == "2") {
                         if ("ups" + data.alldata[0][i].tower_name == t[j].id) {
-                            document.getElementById(t[j].id).innerHTML += '<div class="tooltip"><i class="fa fa-battery-full" aria-hidden="true"></i><span class="tooltiptext" style="top: 5px; left: 20px;"></span></div></br>';
+                            document.getElementById(t[j].id).innerHTML += '<div class="tooltip"><i class="fa fa-battery-full" aria-hidden="true"></i></div></br>';
                             i++;
                         }
                     }
