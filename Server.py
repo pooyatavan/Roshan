@@ -1,34 +1,29 @@
 from multiprocessing.dummy import Pool as ThreadPool
+from turtle import update
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session
-import pyodbc
 from pythonping import ping
-import time
-import threading
+import time, threading
 from waitress import serve
-from scripts import import_from_sql, ip_check, RPR, User_LRCHR, panel, sort_data_by_name
+from scripts import ip_check, RPR, User_LRCHR, panel, sort_data_by_name, sql_job, get_ip_server, updates
 
 pool = ThreadPool(3)
-conn = pyodbc.connect("Driver={SQL Server};" "Server=DESKTOP-APD1VGA;" "Database=solar;" "Trusted_connection=yes;")
 ping_data = []
 time_refresh = 10
 data = []
-add_temp = []
-stop = False
 username = ""
 all_devices = 0
 currency_number = []
 
-all_data, users = import_from_sql.return_import()
+print(get_ip_server.get_ip())
+all_data, users = sql_job.return_import()
 
-# Ping calc
+# Ping Calc
 def ping_system(ip):
-    if stop is False:
-        result = ping(ip, size=1, count=1)
-        if result.rtt_avg_ms == 2000:
-            ping_data.append({'ip': ip, 'ping': "Request timeout"})
-        else:
-            ping_data.append({'ip': ip, 'ping': result.rtt_avg_ms})
-
+    result = ping(ip, size=1, count=1)
+    if result.rtt_avg_ms == 2000:
+        ping_data.append({'ip': ip, 'ping': "Request timeout"})
+    else:
+        ping_data.append({'ip': ip, 'ping': result.rtt_avg_ms})
 
 # start flask server
 def flask():
@@ -38,9 +33,10 @@ def flask():
     @app.route('/_stuff', methods=['GET', 'Post'])
     def stuff():
         if request.method == 'POST':
-            data = []
-            data = request.get_json()
-            panel.update_tower_position(data, conn, all_data)
+            move_save = []
+            move_save = request.get_json()
+            # sql_job.save_move_position(data)
+            print(move_save)
         return jsonify(alldata=all_data)
 
     # Login
@@ -120,35 +116,37 @@ def flask():
     def add():
         error = None
         global username
+        models_list = list(all_data[3][0])
         # Add tower
         if request.method == 'POST':
             if request.form['submit'] == 'Add Tower':
                 tower_name = request.form['tower_name']
+                address = request.form['tower_name']
                 if tower_name == "":
                     error = 'Empty - Choose a name for your tower'
-                    return render_template('add.html', error=error, all_data=all_data, username=username)
+                    return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
                 else:
-                    error = panel.check_tower_name(all_data, tower_name, conn)
-                    return render_template('add.html', error=error, all_data=all_data, username=username)
+                    error = panel.check_tower_name(all_data, tower_name, address)
+                    return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
 
-            # Add radio
+            # Add device
             if request.form['submit'] == 'ADD DEVICE':
                 radio_name = request.form['radio_name']
                 radio_ip = request.form['radio_ip']
                 to_tower = request.form['tower_name']
                 mode = request.form['mode']
-                models = request.form['models']
-                if "" in (radio_name, radio_ip, to_tower, mode, models):
+                model = request.form['models']
+                if "" in (radio_name, radio_ip, to_tower, mode, model):
                     error = 'One of these fields are empty'
-                    return render_template('add.html', error=error, all_data=all_data, username=username)
+                    return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
                 else:
                     if ip_check.ip_format_check(radio_ip) == True:
-                        panel.add_radio(radio_name, radio_ip, to_tower, mode, models, conn, all_data)
+                        panel.add_radio(radio_name, radio_ip, to_tower, mode, model, all_data)
                         error = f'{radio_name} in tower {to_tower} with ip {radio_ip} added successfully'
-                        return render_template('add.html', error=error, all_data=all_data, username=username)
+                        return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
                     else:
                         error = f'ip {radio_ip} is incorect'
-                        return render_template('add.html', error=error, all_data=all_data, username=username)
+                        return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
 
             # delete tower name
             if request.form['submit'] == 'Delete Tower':
@@ -156,11 +154,11 @@ def flask():
                 delete_tower_name = request.form['delete']
                 if "None" in delete_tower_name:
                     error = "Choose a tower"
-                    return render_template('add.html', error=error, all_data=all_data, username=username)
+                    return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
                 else:
                     error = f"{delete_tower_name} Successfully deleted"
-                    panel.delete_tower(delete_tower_name, conn, all_data)
-                    return render_template('add.html', error=error, all_data=all_data, username=username)
+                    panel.delete_tower(delete_tower_name, all_data)
+                    return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
 
             # Edit tower name
             if request.form['submit'] == 'Change tower name':
@@ -168,19 +166,19 @@ def flask():
                 new_tower_name = request.form['new_tower_name']
                 if new_tower_name == "":
                     error = "Choose a new name for your tower"
-                    return render_template('add.html', error=error, all_data=all_data, username=username)
+                    return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
                 else:
                     i = 0
                     while len(all_data[2]) > i:
                         if all_data[2][i]['tower_name'] == new_tower_name:
                             error = f'{new_tower_name} is all ready exist'
-                            return render_template('add.html', error=error, all_data=all_data, username=username)
+                            return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
                         else:
                             i = i + 1
                     if i == len(all_data[2]):
                         error = f"Successfully changed from {target_tower_name} to {new_tower_name}"
-                        panel.edit_tower_name(target_tower_name, new_tower_name, conn, all_data)
-                        return render_template('add.html', error=error, all_data=all_data, username=username)
+                        panel.edit_tower_name(new_tower_name, target_tower_name)
+                        return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
 
             # Edit device name
             if request.form['submit'] == 'Change radio name':
@@ -188,30 +186,31 @@ def flask():
                 new_radio_name = request.form['new_radio_name']
                 if new_radio_name == "":
                     error = "Choose a new name for your radio"
-                    return render_template('add.html', error=error, all_data=all_data, username=username)
+                    return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
                 else:
                     i = 0
                     while len(all_data[0]) > i:
                         if all_data[0][i]['ap_name'] == new_radio_name:
                             error = f'{new_radio_name} is all ready exist'
-                            return render_template('add.html', error=error, all_data=all_data, username=username)
+                            return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
                         else:
                             i = i + 1
                     if i == len(all_data[0]):
                         error = f"Successfully changed from {target_radio_name} to {new_radio_name}"
-                        panel.edit_radio_name(new_radio_name, target_radio_name, conn, all_data)
-                        return render_template('add.html', error=error, all_data=all_data, username=username)
+                        panel.edit_radio_name(new_radio_name, target_radio_name, all_data)
+                        return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
 
-            # Add brand
-            if request.form['submit'] == 'add radio type':
-                radio_type = request.form['radio_type']
-                if radio_type == "":
-                    error = "Type a radio type name"
-                    return render_template('add.html', error=error, all_data=all_data, username=username)
+            # Add model
+            if request.form['submit'] == 'add device model':
+                device_model = request.form['device_model']
+                device_os = request.form['device_os']
+                if device_model == "":
+                    error = "Type a device name"
+                    return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
                 else:
                     error = "done"
-                    panel.add_brand(radio_type, all_data, conn)
-                    return render_template('add.html', error=error, all_data=all_data, username=username)
+                    panel.add_model(device_model, device_os, all_data)
+                    return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
 
             # delete device name
             if request.form['submit'] == 'Delete device name':
@@ -219,11 +218,11 @@ def flask():
                 delete_device_name = request.form['target_device_name']
                 if "None" in delete_device_name:
                     error = "Choose a tower"
-                    return render_template('add.html', error=error, all_data=all_data, username=username)
+                    return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
                 else:
                     error = f"{delete_device_name} Successfully deleted"
-                    panel.delete_device(delete_device_name, conn, all_data)
-                    return render_template('add.html', error=error, all_data=all_data, username=username)
+                    panel.delete_device(delete_device_name, all_data)
+                    return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
 
             # Register user
             if request.form['submit'] == 'REGISTER':
@@ -234,10 +233,10 @@ def flask():
                 new_password = request.form['new_password']
                 if firstname == "" or lastname == "" or new_username == "" or new_password == "":
                     error = "one of the fields are empty"
-                    return render_template('add.html', error=error, all_data=all_data, username=username)
+                    return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
                 else:
-                    error = User_LRCHR.user_check(rank, firstname, lastname, new_username, new_password, users, conn)
-                    return render_template('add.html', error=error, all_data=all_data, username=username)
+                    error = User_LRCHR.user_check(rank, firstname, lastname, new_username, new_password, users, models_list=models_list )
+                    return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list )
 
         else:
             if "username" in session:
@@ -245,7 +244,7 @@ def flask():
                 username_ch = session["username"]
                 # check username rank for access this page
                 if User_LRCHR.check_rank(username_ch, users) == True:
-                    return render_template('add.html', username=username, all_data=all_data)
+                    return render_template('add.html', username=username, all_data=all_data, models_list=models_list )
                 else:
                     return render_template('denied.html', username=username)
             else:
@@ -263,7 +262,7 @@ flask_thread.start()
 while True:
     time.sleep(time_refresh)
     results = pool.map(ping_system, all_data[4])
-    all_data[0] = RPR.replace(stop, ping_data, all_data)
+    all_data[0] = RPR.replace(ping_data, all_data)
     all_data[0] = sort_data_by_name.sort_data(all_data)
     ping_data.clear()
     # currency()
