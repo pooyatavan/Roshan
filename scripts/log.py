@@ -1,12 +1,9 @@
 from datetime import datetime
-from scripts import import_from_sql
+from scripts import sql_job
 
 # log
-def in_to_the_log(conn, event):
+def in_to_the_log(event):
     now = datetime.now()
     dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-    cursor = conn.cursor() 
-    cursor.execute('SELECT * FROM log')
-    cursor.execute(f" insert into log(date, event) values ('{dt_string}', '{str(event)}')")
-    conn.commit()
-    import_from_sql.import_logs()
+    sql_job.insert_to_log_sql(dt_string, event)
+    sql_job.import_logs()

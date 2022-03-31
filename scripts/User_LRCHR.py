@@ -1,4 +1,4 @@
-from scripts import import_from_sql
+from scripts import sql_job
 
 #register
 def register(rank, firstname, lastname, new_username, new_password, conn):
@@ -6,6 +6,7 @@ def register(rank, firstname, lastname, new_username, new_password, conn):
     cursor.execute('SELECT * FROM users')
     cursor.execute(f" insert into users(rank, username, password, firstname, lastname) values ('{str(rank)}', '{str(new_username)}', '{str(new_password)}', '{str(firstname)}', '{str(lastname)}')")
     conn.commit()
+    sql_job.import_users()
 
 # check username exist before register
 def user_check(rank, firstname, lastname, new_username, new_password, users, conn):
@@ -15,13 +16,12 @@ def user_check(rank, firstname, lastname, new_username, new_password, users, con
     else:
         register(rank, firstname, lastname, new_username, new_password, conn)
         error = "user registered successfully"
-        refresh_users_list = import_from_sql.import_users()
-        return error, refresh_users_list
-        
+        return error
+
 # check rank for user
-def check_rank(username, users):
-    if username in users:
-        user = users[username]
+def check_rank(username_ch, users):
+    if username_ch in users:
+        user = users[username_ch]
         if not "3" == user['rank']:
             return False
         else:
