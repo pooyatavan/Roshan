@@ -3,7 +3,7 @@ from flask import Flask, render_template, jsonify, request, redirect, url_for, s
 from pythonping import ping
 import time, threading
 from waitress import serve
-from scripts import ip_check, RPR, User_LRCHR, panel, sort_data_by_name, sql_job, get_ip_server, updates
+from scripts import ip_check, RPR, User_LRCHR, panel, sort_data_by_name, sql_job, get_ip_server, log as logg
 
 pool = ThreadPool(3)
 ping_data = []
@@ -36,6 +36,8 @@ def flask():
         if request.method == 'POST':
             data_moves = request.get_json()
             sql_job.update_tower_position(data_moves)
+            event = "something moved"
+            logg.in_to_the_log(event)
         return jsonify(alldata=all_data)
 
     # Login
@@ -125,7 +127,7 @@ def flask():
                     error = 'Empty - Choose a name for your tower'
                     return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
                 else:
-                    error = panel.check_tower_name(all_data, tower_name, address)
+                    error = panel.create_tower(all_data, tower_name, address)
                     return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
 
             # Add device
@@ -156,7 +158,7 @@ def flask():
                     return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
                 else:
                     error = f"{delete_tower_name} Successfully deleted"
-                    panel.delete_tower(delete_tower_name, all_data)
+                    panel.delete_tower(delete_tower_name)
                     return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
 
             # Edit tower name
@@ -167,17 +169,8 @@ def flask():
                     error = "Choose a new name for your tower"
                     return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
                 else:
-                    i = 0
-                    while len(all_data[2]) > i:
-                        if all_data[2][i]['tower_name'] == new_tower_name:
-                            error = f'{new_tower_name} is all ready exist'
-                            return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
-                        else:
-                            i = i + 1
-                    if i == len(all_data[2]):
-                        error = f"Successfully changed from {target_tower_name} to {new_tower_name}"
-                        panel.edit_tower_name(new_tower_name, target_tower_name)
-                        return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
+                    error = panel.edit_tower_name(new_tower_name, target_tower_name, all_data)
+                    return render_template('add.html', error=error, all_data=all_data, username=username, models_list=models_list)
 
             # Edit device name
             if request.form['submit'] == 'Change radio name':
