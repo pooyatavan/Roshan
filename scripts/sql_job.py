@@ -1,4 +1,4 @@
-import mysql.connector, logging
+import mysql.connector, logging, time
 
 all_data = [[], [], [], [{}], [], []]
 # [devices] - [empty] - [Towers] - [Models] - [ips] - [{os}]
@@ -27,7 +27,7 @@ def import_towers():
     all_data[2] = []
     cursor.execute('SELECT * FROM towers')
     for row in cursor:
-        all_data[2].append({'id': row[0], 'tower_name': row[1], 'top': row[2], 'left': row[3]})
+        all_data[2].append({'id': row[0], 'tower_name': row[1], 'top': row[2], 'left': row[3], 'address': row[4]})
 
 def import_users():
     cursor.execute('SELECT * FROM users')
@@ -45,13 +45,6 @@ def import_logs():
     for row in cursor:
         all_data[1].append({'date': row[1], 'event': row[2]})
 
-def insert_tower_name(id, add_tower_name, address, all_data):
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO towers (id, tower_name, top_pos, left_pos, address) VALUES (%s, %s, %s, %s, %s)", (id, add_tower_name, "200px","200px", address))
-    conn.commit()
-    sort_id_for_tower()
-    import_towers()
-
 def sort_id_for_tower():
     cursor = conn.cursor()
     list_old = []
@@ -62,6 +55,12 @@ def sort_id_for_tower():
         cursor.execute(f"UPDATE towers SET id = '{counter}' WHERE id = ('{qw}')")
         conn.commit()
         counter = counter + 1
+    import_towers()
+
+def insert_tower_name(add_tower_name, address):
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO towers (tower_name, top_pos, left_pos, address) VALUES (%s, %s, %s, %s)", (add_tower_name, "200px", "200px", address))
+    conn.commit()
     import_towers()
 
 # Update tower position
@@ -93,9 +92,8 @@ def delete_tower_from_sql(delete_tower_name):
     cursor = conn.cursor()
     cursor.execute(f"DELETE FROM towers WHERE tower_name = '{delete_tower_name}'")
     conn.commit()
-    sort_id_for_tower()
     import_towers()
-
+    
 def delete_model(brand_name):
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM type')
@@ -121,7 +119,7 @@ def insert_model_sql(device_model, device_os):
     cursor.execute("INSERT INTO models (models, os) VALUES (%s, %s)", (device_model, device_os))
     conn.commit()
 
-def edit_device_name_sql(new_radio_name, target_radio_name,):
+def edit_device_name_sql(new_radio_name, target_radio_name):
     cursor = conn.cursor()
     cursor.execute(f"UPDATE devices SET device_name = '{new_radio_name}' WHERE device_name = ('{target_radio_name}')")
     conn.commit()
@@ -137,8 +135,8 @@ def return_import():
     import_devices()
     import_users()
     import_models()
-    import_towers()
     import_logs()
+    import_towers()
     log = logging.getLogger('werkzeug')
     log.setLevel(logging.ERROR)
     return all_data, users
