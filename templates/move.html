@@ -8,7 +8,6 @@
 <script type=text/javascript>
 var intervalID = setInterval(update_values, 4000);
 $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
-var test = 5;
 var j = 0;
 var y = 0;
 var m = 0;
@@ -32,11 +31,11 @@ function update_values() {
                 }
                 if (x[j].id == data.alldata[0][i].tower_name) {
                     if (data.alldata[0][i].ptp == "0") {
-                        document.getElementById(x[j].id).innerHTML += '<div class="nodes"><i class="fa fa-circle"></i><div class="tooltip">' + data.alldata[0][i].ap_name + '</div></div>';
+                        document.getElementById(x[j].id).innerHTML += '<div class="nodes"><i class="fa fa-circle"></i><div class="tooltip">' + data.alldata[0][i].tower_name + '</div></div>';
                         i++;
                     }
                     if (data.alldata[0][i].ptp == "1") {
-                        document.getElementById(x[j].id).innerHTML += '<div class="nodes"><i class="fa fa-compress"></i><div class="tooltip">' + data.alldata[0][i].ap_name + '</div></div>';
+                        document.getElementById(x[j].id).innerHTML += '<div class="nodes"><i class="fa fa-compress"></i><div class="tooltip">' + data.alldata[0][i].tower_name + '</div></div>';
                         i++;
                     }
                     if (data.alldata[0][i].ptp == "4") {
@@ -76,9 +75,8 @@ function screen() {
     $.getJSON($SCRIPT_ROOT + '/_stuff',
     function(data) {
         for (i = 0; i < data.alldata[2].length; i++) {
-            document.getElementById('containment-wrapper-move').innerHTML += '<div id="' + data.alldata[2][j].id + '" class="draggable ui-draggable" data-left="20px" data-top="20px" style="position: absolute; left:' + data.alldata[2][j].left + '; top:' + data.alldata[2][j].top + '"><div class="left"><div class="left_top"><a>' + data.alldata[2][j].tower_name + '</a><br></div></br><div class="left_down" id="ups' + data.alldata[2][j].tower_name + '"></div></div><div class="right" id="' + data.alldata[2][j].tower_name + '"></div></div>';
-            document.getElementById('mySelect').innerHTML += '<option value="' + data.alldata[2][j].id + '">' + data.alldata[2][j].tower_name + '</option>';
-            j = j + 1;
+            document.getElementById('containment-wrapper-move').innerHTML += '<div id="' + data.alldata[2][i].id + '" class="draggable ui-draggable" data-left="20px" data-top="20px" style="position: absolute; left:' + data.alldata[2][i].left + '; top:' + data.alldata[2][i].top + '"><div class="left"><div class="left_top"><a>' + data.alldata[2][i].tower_name + '</a><br></div></br><div class="left_down" id="ups' + data.alldata[2][i].device_name + '"></div></div><div class="right" id="' + data.alldata[2][i].device_name + '"></div></div>';
+            document.getElementById('mySelect').innerHTML += '<option value="' + data.alldata[2][i].id + '">' + data.alldata[2][i].tower_name + '</option>';
         }
         t = document.getElementsByClassName("left_down");
     });
