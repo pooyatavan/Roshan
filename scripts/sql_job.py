@@ -27,7 +27,7 @@ def import_towers():
     all_data[2] = []
     cursor.execute('SELECT * FROM towers')
     for row in cursor:
-        all_data[2].append({'id': row[0], 'tower_name': row[1], 'top': row[2], 'left': row[3], 'address': row[4]})
+        all_data[2].append({'id': row[0], 'tower_name': row[1], 'top': row[2], 'left': row[3]})
 
 def import_users():
     cursor.execute('SELECT * FROM users')
@@ -45,12 +45,41 @@ def import_logs():
     for row in cursor:
         all_data[1].append({'date': row[1], 'event': row[2]})
 
-def insert_tower_name(add_tower_name, address, all_data):
+def insert_tower_name(id, add_tower_name, address, all_data):
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO towers (tower_name, top_pos, left_pos, address) VALUES (%s, %s, %s, %s)", (add_tower_name, "200px","200px", address))
+    cursor.execute("INSERT INTO towers (id, tower_name, top_pos, left_pos, address) VALUES (%s, %s, %s, %s, %s)", (id, add_tower_name, "200px","200px", address))
     conn.commit()
+    sort_id_for_tower()
     import_towers()
-    # updates.update_towers(all_data, conn)
+
+def sort_id_for_tower():
+    cursor = conn.cursor()
+    list_old = []
+    for data in all_data[2]:
+        list_old.append(data['id'])
+    counter = 1
+    for qw in list_old:
+        cursor.execute(f"UPDATE towers SET id = '{counter}' WHERE id = ('{qw}')")
+        conn.commit()
+        counter = counter + 1
+    import_towers()
+
+# Update tower position
+def update_tower_position(data_moves):
+    u = 0
+    p = 1
+    cursor = conn.cursor()
+    while True:
+        if len(data_moves) == u:
+            data_moves = []
+            import_towers()
+            break
+        else:
+            cursor.execute(f" UPDATE towers SET top_pos = '{data_moves[u].get('top')}',"
+                           f" left_pos = '{data_moves[u].get('left')}' WHERE Id = {str(p)} ")
+            p = p + 1
+            u = u + 1
+            conn.commit()
 
 def insert_device(radio_name, radio_ip, to_tower, mode, models, os, all_data):
     all_data[0] = []
@@ -59,11 +88,12 @@ def insert_device(radio_name, radio_ip, to_tower, mode, models, os, all_data):
     conn.commit()
     import_devices()
 
-def delete_tower_from_sql(delete_tower_name, all_data):
+def delete_tower_from_sql(delete_tower_name):
     conn = mysql.connector.connect(host='localhost', database='roshan', user='root', password='123456')
     cursor = conn.cursor()
     cursor.execute(f"DELETE FROM towers WHERE tower_name = '{delete_tower_name}'")
     conn.commit()
+    sort_id_for_tower()
     import_towers()
 
 def delete_model(brand_name):
@@ -102,24 +132,6 @@ def insert_to_log_sql(dt_string, event):
     cursor.execute("INSERT INTO log (date, event) VALUES (%s, %s)", (dt_string, event))
     conn.commit()
     import_models()
-
-def save_move_position(data):
-    # conn = mysql.connector.connect(host='localhost', database='roshan', user='root', password='123456')
-    # cursor = conn.cursor()
-    print(data)
-    # u = 0
-    # p = 1
-    # while True:
-        # if len(data) == u:
-            # data = []
-            # import_towers()
-            # break
-        # else:
-            # cursor.execute(f" UPDATE towers SET top_pos = '{data[u].get('top')}', left_pos = '{data[u].get('left')}' WHERE Id = '{str(p)}'")
-            # cursor.execute ("""UPDATE towers SET top_pos=%s, left_pos=%s, WHERE Id=%s""", (data[u].get('top'), data[u].get('left'), data[u].get('id')))
-            # p = p + 1
-            # u = u + 1
-            # conn.commit()
 
 def return_import():
     import_devices()
