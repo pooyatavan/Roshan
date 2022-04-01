@@ -1,13 +1,13 @@
 <html>
-<head>
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-2.js')}}" data-turbolinks-track="reload"></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-ui.js')}}" data-turbolinks-track="reload"></script>
-    <link rel="stylesheet" media="all" href="{{ url_for('static', filename='css/style.css')}}">
-    <link rel="stylesheet" media="all" href="{{ url_for('static', filename='css/panel.css')}}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-</head>
-
+    <head>
+        <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+        <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-2.js')}}" data-turbolinks-track="reload"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-ui.js')}}" data-turbolinks-track="reload"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/panel-tab.js')}}" data-turbolinks-track="reload"></script>
+        <link rel="stylesheet" media="all" href="{{ url_for('static', filename='css/style.css')}}">
+        <link rel="stylesheet" media="all" href="{{ url_for('static', filename='css/panel.css')}}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    </head>
 <header>
     <p class="logo">roshan</p>
     <nav>
@@ -21,11 +21,10 @@
     </nav>
     <div class="cta">
         <div class="dropdown">
-        <a href="/logout">&nbsp; {{ username }}</a>
+            <a href="/logout">&nbsp; {{ username }}</a>
         </div>
     </div>
 </header>
 {% block content %}
 {% endblock %}
-
 </html>

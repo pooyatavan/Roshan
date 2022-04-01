@@ -1,26 +1,6 @@
 {% extends "layout.html" %}
 {% block content %}
-<title>Roshan - Modify</title>
-<script>
-    function openPage(evt, pageName) {
-        // Declare all variables
-        var i, tabcontent, tablinks;
-        // Get all elements with class="tabcontent" and hide them
-        tabcontent = document.getElementsByClassName("tabcontent");
-        for (i = 0; i < tabcontent.length; i++) {
-            tabcontent[i].style.display = "none";
-        }
-        // Get all elements with class="tablinks" and remove the class "active"
-        tablinks = document.getElementsByClassName("tablinks");
-        for (i = 0; i < tablinks.length; i++) {
-            tablinks[i].className = tablinks[i].className.replace(" active", "");
-        }
-        // Show current tab, and add an "active" class to the button that opened the tab
-        document.getElementById(pageName).style.display = "block";
-        evt.currentTarget.className += " active";
-    }
-    document.getElementById("defaultOpen").click();
-</script>
+<title>Roshan - Panel</title>
 <body>
     <div class="content-panel">
         <div class="tab">
@@ -45,18 +25,18 @@
                             {% endfor %}
                         </select>
                         <select id="models" name="models">
-                            <option value="">Choose radio type</option>
-                            {% for data in all_data[3] %}
-                            <option value="{{ data }}">{{ data }}</option>
+                            <option value="">Choose Model</option>
+                            {% for models in models_list %}
+                            <option value="{{ models }}">{{ models }}</option>
                             {% endfor %}
                         </select>
                         <select id="mode" name="mode">
                             <option value="">Choose mode</option>
-                            <option value="0">AP</option>
-                            <option value="1">PTP</option>
-                            <option value="2">UPS</option>
-                            <option value="3">Router</option>
-                            <option value="4">PTP Tower</option>
+                            <option value="0">Access point</option>
+                            <option value="1">Point to point</option>
+                            <option value="2">Tower UPS</option>
+                            <option value="3">Tower Router</option>
+                            <option value="4">Tower backbon</option>
                         </select>
                     <input type="submit" value="ADD DEVICE" name="submit">
                 </div>
@@ -65,6 +45,7 @@
         <div id="tab2" class="tabcontent">
             <form action="{{ url_for('add')}}" method="POST">
                 <input type="text" id="tower_name" name="tower_name" placeholder="Tower name">
+                <input type="text" id="address" name="address" placeholder="address">
                 <input type="submit" value="Add Tower" name="submit">
             </form>
         </div>
@@ -81,8 +62,9 @@
         </div>
         <div id="tab4" class="tabcontent">
             <form action="{{ url_for('add')}}" method="POST">
-                <input type="text" id="radio_type" name="radio_type" placeholder="Radio  type name">
-                <input type="submit" value="add radio type" name="submit">
+                <input type="text" id="device_model" name="device_model" placeholder="Device model name">
+                <input type="text" id="device_os" name="device_os" placeholder="Device OS">
+                <input type="submit" value="add device model" name="submit">
             </form>
         </div>
         <div id="tab5" class="tabcontent">
@@ -94,6 +76,16 @@
                 </select>
                 <input type="text" id="new_radio_name" name="new_radio_name" placeholder="New radio name">
                 <input type="submit" value="Change radio name" name="submit">
+            </form>
+        </div>
+        <div id="tab6" class="tabcontent">
+            <form action="{{ url_for('add')}}" method="POST">
+                <select id="target_device_name" name="target_device_name">
+                    {% for data in all_data[0] %}
+                    <option value="{{ data.ap_name }}">{{ data.ap_name }}</option>
+                    {% endfor %}
+                </select>
+                <input type="submit" value="Delete device name" name="submit">
             </form>
         </div>
         <div id="tab7" class="tabcontent">
