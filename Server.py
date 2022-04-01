@@ -1,5 +1,4 @@
 from multiprocessing.dummy import Pool as ThreadPool
-from turtle import update
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 from pythonping import ping
 import time, threading
@@ -9,10 +8,11 @@ from scripts import ip_check, RPR, User_LRCHR, panel, sort_data_by_name, sql_job
 pool = ThreadPool(3)
 ping_data = []
 time_refresh = 10
-data = []
+move_save = []
 username = ""
 all_devices = 0
 currency_number = []
+data = []
 
 print(get_ip_server.get_ip())
 all_data, users = sql_job.return_import()
@@ -29,14 +29,13 @@ def ping_system(ip):
 def flask():
     app = Flask(__name__, static_folder='static', template_folder='templates')
     app.secret_key = "hi"
+
     # Data pass through
     @app.route('/_stuff', methods=['GET', 'Post'])
     def stuff():
         if request.method == 'POST':
-            move_save = []
-            move_save = request.get_json()
-            # sql_job.save_move_position(data)
-            print(move_save)
+            data_moves = request.get_json()
+            sql_job.update_tower_position(data_moves)
         return jsonify(alldata=all_data)
 
     # Login
