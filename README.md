@@ -6,9 +6,9 @@ In addition, thoroughly read through the issue tracker guide to ensure your repo
 # Submitting fixes
 Fixes are submitted as pull requests via Github.
 # In progress
-SSH (Mikrotik, UBNT), SQL, Report from Nodes (excel), Add to SLQ from list
+SSH(Mikrotik, UBNT), Report
 # How to install
-1. Download the Source as zip archive and then extract it.
+1. Download the Source and then extract it.
 2. Import databases to your MySQL server.
 3. Run server.py
 4. Default Username/Password is admin/admin
