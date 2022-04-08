@@ -7,6 +7,12 @@ In addition, thoroughly read through the issue tracker guide to ensure your repo
 Fixes are submitted as pull requests via Github.
 # In progress
 SSH(Mikrotik, UBNT), Report
+# Requirement
+1. Mysql server
+2. mysql client(yog, ...)
+3. Flask Framework
+4. pythonping
+5. paramiko
 # How to install
 1. Download the Source and then extract it.
 2. Import databases to your MySQL server.
