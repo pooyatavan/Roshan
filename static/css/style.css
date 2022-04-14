@@ -18,79 +18,40 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
-header {
-    width: 100%;
-    height: 45px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 10%;
-    background-color: black;
-    transition: all 0.2s ease-out;
-    z-index: 3;
-    position: fixed;
-    box-sizing: border-box;
+.sidebar {
+	position: fixed;
+	top: 0px;
+	left: 0;
+	width: 50px;
+	height: 100%;
+	background: black;
+    z-index: 6;
 }
 
-.nav {
-    list-style: none;
-}
-
-.nav_links li {
-    display: inline-block;
-    padding: 0px 20px;
-}
-
-.nav_links a {
+.sidebar a {
+    padding: 14px 16px;
+    font-size: 18px;
+	display: block;
+	float: left;
+	color: white;
+    list-style-type: none;
     text-decoration: none;
-    font-family: regular;
-    letter-spacing: 1px;
-    color: #d6d6d6;
-    font-size: 14px;
+    transition: 0.3s;
 }
 
-.nav_links a:hover {
-    color: white;
+.sidebar a:hover {
+    background-color: white;
+    color: black;
+}
+.sidebar a:nth-child(7) {
+    bottom: 0;
+    position: absolute;
+    margin-bottom: 60px;;
 }
 
-.logo {
-    font-family: bold;
-    cursor: pointer;
-    user-select: none;
-    color: #d6d6d6;
-    text-decoration: none;
-    font-size: 19px;
-    text-transform: uppercase;
-}
-
-.logo:hover {
-    color: white;
-}
-
-.cta {
-    text-decoration: none;
-    font-family: regular;
-    letter-spacing: 1px;
-    color: white;
-    border: none;
-    padding: 9px 25px;
-}
-
-.cta a {
-    border: none;
-    font-size: 16px;
-    text-decoration: none;
-    color: white;
-    display: inline-block;
-}
-
-.cta a:first-child {
-    user-select: none;
-    cursor: pointer;
-}
-
-form {
-    padding-top: 10px;
+.sidebar a:nth-child(8) {
+    bottom: 0;
+    position: absolute;
 }
 
 .login {
@@ -112,39 +73,7 @@ form {
     inset -1px -1px 5px rgba(255,255,255,1);
 }
 
-.header {
-    top: 0;
-    background-color: unset;
-    width: 100%;
-    height:80px;
-    border-radius: 5px 5px 0 0;
-}
-
-.header p {
-    position: relative;
-    top: 23px;
-    color: #000;
-    text-transform: uppercase;
-    font-size: 30px;
-    font-family: impact;
-    user-select: none;
-    letter-spacing: 20px;
-    display: inline-block;
-}
-
-.header p:last-child {
-    font-family: regular;
-    font-size: 17px;
-    user-select: none;
-    color: black;
-    display: inline-block;
-    letter-spacing: -20px;
-    margin-top: 31px;
-    margin-left: -15px;
-    position: absolute;
-}
-
-input[type="text"], [type="password"] {
+.login input[type="text"], [type="password"] {
     border: 0;
     display: block;
     margin: 30px auto;
@@ -166,26 +95,6 @@ input[type="text"], [type="password"] {
     color: #000;
     font-family: regular;
     font-size: 15px;
-}
-
-input[type="submit"] {
-    width: auto;
-    display: block;
-    margin: 20px auto;
-    text-align: center;
-    padding: 14px 20px;
-    color: black;
-    transition: 0.25s;
-    cursor: pointer;
-    border: 1px solid #d2d6d8;
-    background-color: #eaeef0;
-    text-transform: uppercase;
-    font-family: regular;
-    font-weight: bold;
-}
-
-input[type="submit"]:hover {
-    background-color: #e7e7e7;
 }
 
 .error {
@@ -227,18 +136,11 @@ input[type="submit"]:hover {
     color: black;
 }
 
-.hello-user {
-    float: right;
-    overflow: hidden;
-    display: inline-block;
-}
-
 #containment-wrapper {
     overflow-x: hidden;
     width: 100%;
     height: 150%;
     padding-top: 40px;
-    background: none;
 }
 
 #containment-wrapper-move {
@@ -301,7 +203,6 @@ input[type="submit"]:hover {
 
 .left_down {
     width: 100%;
-    height-min: 200px;
     justify-content: center;
     margin-left: 23px;
     margin-top: -10px;
@@ -336,7 +237,6 @@ input[type="submit"]:hover {
 }
 
 .nodes i {
-    float: left;
     display: inline-block;
 }
 
@@ -345,6 +245,10 @@ input[type="submit"]:hover {
     display: inline-block;
     text-decoration: none;
     font-size: 14px;
+}
+
+.tooltip i {
+    height: 20px;;
 }
 
 .tooltip .tooltiptext {
@@ -385,7 +289,6 @@ input[type="submit"]:hover {
     width: 17%;
     height: auto;
     text-align: center;
-    justify: flex;
     margin: 10px 10px;
     float: left;
     border-radius: 20px;
@@ -417,18 +320,12 @@ input[type="submit"]:hover {
 .all_devices {
     float: left;
     display: inline;
-    margin-top: 50px;
-    margin-left: 10px;
+    margin-top: 20px;
+    margin-left: 70px;
     width: 400px;
     height: 100px;
-    border: 10px solid #eaeef0;
-    background-color: #eaeef0;
-    box-shadow: -8px -8px 15px rgba(255,255,255,1),
-    8px 8px 15px rgba(0,0,0,0.2),
-    inset 3px 3px 5px rgba(0,0,0,0.1),
-    inset -1px -1px 5px rgba(255,255,255,1);
-    border-radius: 20px;
-    color: #fff;
+    background-color: black;
+    color: white;
     text-align: center;
     line-height: 20px;
 }
@@ -437,17 +334,14 @@ input[type="submit"]:hover {
     width: 100%;
     height: auto;
     text-align: left;
-    background-color: #a32fff;
-    border-radius: 10px 10px 0 0 ;
-    text-transform: uppercase;
-    box-shadow: inset 3px 3px 5px rgba(0,0,0,0.1),
-    inset -1px -1px 5px rgba(255,255,255,1);
 }
 
 .all_devices .title a {
     font-family: regular;
     margin-left: 7px;
-    letter-spacing: 3px;
+    letter-spacing: 1px;
+    color: white;
+    text-transform: uppercase;
 }
 
 table {
@@ -458,18 +352,21 @@ td {
     font-family: regular;
     font-size: 25px;
     text-align: center;
+    color: white;
 }
 
 .all_devices .line {
     width: auto;
     height: 30px;
-    border-bottom: solid 5px #a32fff;
+    border-bottom: solid 5px white;
+    color: white;
 }
 
 th {
     font-size: 18px;
     font-family: regular;
     text-align: center;
+    color: white;
 }
 
 .currency {
@@ -540,7 +437,7 @@ h1 {
 .log {
     width: 100%;
     position: relative;
-    top: 50px;
+    top: 2px;
 }
 
 .table-wrapper{
@@ -564,7 +461,8 @@ h1 {
 
 .fl-table td {
     border-right: 1px solid #f8f8f8;
-    font-size: 12px;
+    font-size: 14px;
+    color: black;
 }
 
 .fl-table thead th {
@@ -584,3 +482,32 @@ h1 {
     background: #F8F8F8;
 }
 /* Log */
+
+.save {
+    top: 10px;
+    right: 10px;
+    width: 50px;
+    height: 50px;
+    float: right;
+    position: fixed;
+    text-decoration: none;
+    text-align: center;
+    display: block;
+}
+
+.save_btn {
+    background: none;
+    padding: 12px 12px;
+    font-size: 17px;
+    border-radius: 100%;
+    color: black;
+    border: solid 1px black;
+    transition: 0.4s;
+}
+
+.save_btn:hover{
+    font-size: 20px;
+    color: white;
+    background-color: black;
+    cursor: pointer;
+}
