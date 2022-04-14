@@ -1,24 +1,13 @@
 {% extends "layout.html" %}
 {% block content %}
 <title>Roshan - Move</title>
-<style>
-.draggable {cursor:move;}
-</style>
-<script type=text/javascript>
-    var $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
-</script>
-<div class="panel">
-    <div class="tools">
-        <form action="" method="post">
-            <select class="move_select" id="mySelect"></select>
-            <button class="btn" type="button" onclick="move()">Move</button>
-            <button class="btn" onclick="save()">Save</button>
-        </form>
-    </div>
-</div>
+<style>.draggable {cursor:move;}</style>
+<script type=text/javascript>$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};</script>
 <body onload="screen()">
-    <script type="text/javascript" src="{{ url_for('static', filename='js/move.js')}}" data-turbolinks-track="reload"></script>
-    <div id="containment-wrapper-move">
+<script type="text/javascript" src="{{ url_for('static', filename='js/move.js')}}" data-turbolinks-track="reload"></script>
+<div class="save"><button class="save_btn" onclick="save()"><i class="fa-solid fa-circle-check"></i></button></div>
+
+    <div id="containment-wrapper">
     </div>
 </body>
 {% endblock content %}

@@ -1,29 +1,26 @@
 <html>
-    <head>
-        <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-        <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-2.js')}}" data-turbolinks-track="reload"></script>
-        <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-ui.js')}}" data-turbolinks-track="reload"></script>
-        <script type="text/javascript" src="{{ url_for('static', filename='js/panel-tab.js')}}" data-turbolinks-track="reload"></script>
-        <link rel="stylesheet" media="all" href="{{ url_for('static', filename='css/style.css')}}">
-        <link rel="stylesheet" media="all" href="{{ url_for('static', filename='css/panel.css')}}">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    </head>
-<header>
-    <p class="logo">roshan</p>
-    <nav>
-        <ul class="nav_links">
-            <li><a href="/dashboard">Dashboard</a></li>
-            <li><a href="/solar">Solar</a></li>
-            <li><a href="/add">Panel</a></li>
-            <li><a href="/move">Move</a></li>
-            <li><a href="/log">Log</a></li>
-        </ul>
-    </nav>
-    <div class="cta">
-        <div class="dropdown">
-            <a href="/logout">&nbsp; {{ username }}</a>
-        </div>
-    </div>
+  <head>
+      <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+      <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-2.js')}}" data-turbolinks-track="reload"></script>
+      <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-ui.js')}}" data-turbolinks-track="reload"></script>
+      <script type="text/javascript" src="{{ url_for('static', filename='js/panel-tab.js')}}" data-turbolinks-track="reload"></script>
+      <script type="text/javascript" src="{{ url_for('static', filename='js/icon.js')}}" data-turbolinks-track="reload"></script>
+
+      <link rel="stylesheet" media="all" href="{{ url_for('static', filename='css/panel.css')}}">
+      <link rel="stylesheet" media="all" href="{{ url_for('static', filename='css/style.css')}}">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  </head>
+  <header>
+    <div class="sidebar">
+      <a href="/dashboard"><i class="fa-solid fa-paperclip"></i></a>
+      <a href="/solar"><i class="fa-brands fa-watchman-monitoring"></i></a>
+      <a href="/move"><i class="fa-solid fa-arrows-up-down-left-right"></i></a>
+      <a href="/panel"><i class="fa-solid fa-wrench"></i></a>
+      <a href="/log"><i class="fa-solid fa-floppy-disk" title="Log"></i></a>
+      <a href="/tools"><i class="fa-solid fa-sitemap" title="Tools"></i></a>
+      <a href="/user"><i class="fa-solid fa-user" title="User Profile"></i></a>
+      <a href="/logout"><i class="fa-solid fa-arrow-right-from-bracket" title="Logout"></i></a>
+  </div>
 </header>
 {% block content %}
 {% endblock %}
