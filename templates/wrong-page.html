@@ -1,0 +1,9 @@
+{% extends "layout.html" %}
+{% block content %}
+<body>
+    <div class="message">
+      <h1>404 - Page Not Found</h1>
+      <p>What you were looking for is just not there. <a href="{{ url_for('dashboard') }}">go somewhere nice</a></p>
+    </div>
+</body>
+{% endblock content %}
