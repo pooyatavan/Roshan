@@ -12,5 +12,6 @@ create table `devices` (
 	`ip` varchar (150),
 	`ptp` varchar (150),
 	`models` varchar (300),
-	`os` varchar (150)
+	`os` varchar (150),
+	`status` varchar (50)
 ); 
