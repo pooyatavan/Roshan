@@ -45,7 +45,8 @@ def read_from_sql():
     cursor.execute('SELECT * FROM devices')
     for row in cursor:
         all_data[0].append({'id': row[0], 'tower_name': row[1], 'device_name': row[2], 'ip': row[3], 'ping': "", 'mode': row[4], 'models': row[5], 'os': row[6], 'status': row[7]})
-        ips.insert(0, row[3])
+        if row[7] == "enable":
+            ips.insert(0, row[3])
 
     # make dictionary from towers name
     cursor.execute('SELECT * FROM towers')
@@ -112,9 +113,9 @@ def sort_towers_id():
         counter = counter + 1
 
 # Create towers
-def create_tower(add_tower_name):
+def create_tower(add_tower_name, new_tower_address):
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO towers (tower_name, top_pos, left_pos, address) VALUES (%s, %s, %s, %s)", (add_tower_name, "200px", "200px", "address"))
+    cursor.execute("INSERT INTO towers (tower_name, top_pos, left_pos, address) VALUES (%s, %s, %s, %s)", (add_tower_name, "200px", "200px", new_tower_address))
     conn.commit()
     update_towers()
     sort_towers_id()
@@ -180,7 +181,7 @@ def ip_format_check(device_ip):
 def add_device(new_device_name, new_device_ip, get_tower_name, get_mode, get_model):
     os = all_data[3][0].get(f"{get_model}")
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO devices (tower_name, device_name, ip, mode, models, os, status) VALUES (%s, %s, %s, %s, %s, %s, %s)", (get_tower_name, new_device_name, new_device_ip, get_mode, get_model, os, ""))
+    cursor.execute("INSERT INTO devices (tower_name, device_name, ip, mode, models, os, status) VALUES (%s, %s, %s, %s, %s, %s, %s)", (get_tower_name, new_device_name, new_device_ip, get_mode, get_model, os, "enable"))
     conn.commit()
     update_radios()
 
@@ -215,7 +216,8 @@ def update_radios():
     cursor.execute('SELECT * FROM devices')
     for row in cursor:
         all_data[0].append({'id': row[0], 'tower_name': row[1], 'device_name': row[2], 'ip': row[3], 'ping': "", 'mode': row[4], 'models': row[5], 'os': row[6], 'status': row[7]})
-        ips.insert(0, row[3])
+        if row[7] == "enable":
+            ips.insert(0, row[3])
 
 # delete device name
 def delete_device(delete_devive_name):
@@ -231,6 +233,12 @@ def change_ip(new_ip, target_ip):
     conn.commit()
     update_radios()
 
+# change status mode for device
+def change_status(target_device, status_mode):
+    cursor = conn.cursor()
+    cursor.execute(f"UPDATE devices SET status = '{status_mode}' WHERE device_name = ('{target_device}')")
+    conn.commit()
+    update_radios()
 ############################ Device end #############################
 #####################################################################
 ############################ Model start ############################
@@ -276,6 +284,7 @@ def fto_insert(counter, finder):
         tto = time.localtime()
         tto = f'{tto[3]}{tto[4]}{tto[5]}'
         timeout_list.append({'ip': ping_data[counter]["ip"], 'time': tto})
+        # update_status()
     else:
         t = 0
         while True:
@@ -356,7 +365,7 @@ def remove_user(target_user):
 def flask():
     app = Flask(__name__, static_folder='static', template_folder='templates')
     app.secret_key = "hi"
-
+    
     # Data pass through
     @app.route('/_stuff', methods=['GET', 'Post'])
     def stuff():
@@ -366,6 +375,7 @@ def flask():
             update_tower_position(move_data)
         return jsonify(alldata=all_data)
 
+    
     # Login
     @app.route("/", methods=['GET', 'POST'], )
     @app.route('/login', methods=['GET', 'POST'])
@@ -388,6 +398,12 @@ def flask():
             if "username" in session:
                 return redirect(url_for('solar'))
         return render_template('login.html', error=error, alldata=all_data)
+
+    @app.errorhandler(404)
+    def page_not_found(e):
+        return render_template('wrong-page.html'), 404
+
+    app.register_error_handler(404, page_not_found)
 
     # Solar page
     @app.route("/solar")
@@ -455,12 +471,13 @@ def flask():
         if request.method == 'POST':
             if request.form['submit'] == 'Add Tower':
                 new_tower_name = request.form['tower_name']
-                if new_tower_name == "":
-                    error = 'Empty - Choose a name for your tower'
+                new_tower_address = request.form['address']
+                if new_tower_name == "" or new_tower_address == "":
+                    error = 'Empty - Choose a name or address for your tower'
                     return render_template('panel.html', error=error, all_data=all_data, username=username, user_list=user_list)
                 else:
                     if check_tower_name(new_tower_name) == False:
-                        create_tower(new_tower_name)
+                        create_tower(new_tower_name, new_tower_address)
                         error = f'{new_tower_name} added successfully'
                         log_page(error)
                         return render_template('panel.html', error=error, all_data=all_data, username=username, user_list=user_list)
@@ -536,8 +553,8 @@ def flask():
             if request.form['submit'] == 'Change radio name':
                 target_device_name = request.form['target_radio_name']
                 new_device_name = request.form['new_radio_name']
-                if new_device_name == "":
-                    error = "Choose a new name for your device"
+                if new_device_name == "" or target_device_name == "None":
+                    error = "Choose a new name for your device or select a device"
                     return render_template('panel.html', error=error, all_data=all_data, username=username, user_list=user_list)
                 else:
                     if check_device_name(new_device_name) == True:
@@ -568,7 +585,7 @@ def flask():
                 new_lastname = request.form['lastname']
                 new_username = request.form['new_username']
                 new_password = request.form['new_password']
-                if new_firstname == "" or new_lastname == "" or new_username == "" or new_password == "":
+                if new_firstname == "" or new_lastname == "" or new_username == "" or new_password == "" or new_rank == "None":
                     error = "one of the fields are empty"
                     return render_template('panel.html', error=error, all_data=all_data, username=username,user_list=user_list)
                 else:
@@ -579,22 +596,43 @@ def flask():
             # Remove user
             if request.form['submit'] == 'Remove user':
                 target_user = request.form['target_user']
-                remove_user(target_user)
-                error = f'User {target_user} deleted'
-                log_page(error)
-                return render_template('panel.html', error=error, all_data=all_data, username=username,user_list=user_list)
+                if target_user == "None":
+                    error = "Select a user to remove"
+                    return render_template('panel.html', error=error, all_data=all_data, username=username,user_list=user_list)
+                else:
+                    remove_user(target_user)
+                    error = f'User {target_user} deleted'
+                    log_page(error)
+                    return render_template('panel.html', error=error, all_data=all_data, username=username,user_list=user_list)
 
-            # change ip address
+            # change device ip
             if request.form['submit'] == 'change ip':
                 target_ip = request.form['target_ip']
                 new_ip = request.form['new_ip_device']
-                if ip_format_check(new_ip) == True:
-                    if check_ip_exist(new_ip) == True:
-                        error = f"{new_ip} is allready exist"
-                        return render_template('panel.html', error=error, all_data=all_data, username=username,user_list=user_list)
-                    else:
-                        change_ip(new_ip, target_ip)
-                        return render_template('panel.html', error=error, all_data=all_data, username=username,user_list=user_list)
+                if target_ip == "None" or new_ip == "None":
+                    error = "select your target ip or input your ip address"
+                    return render_template('panel.html', error=error, all_data=all_data, username=username,user_list=user_list)
+                else:
+                    if ip_format_check(new_ip) == True:
+                        if check_ip_exist(new_ip) == True:
+                            error = f"{new_ip} is allready exist"
+                            return render_template('panel.html', error=error, all_data=all_data, username=username,user_list=user_list)
+                        else:
+                            change_ip(new_ip, target_ip)
+                            return render_template('panel.html', error=error, all_data=all_data, username=username,user_list=user_list)
+
+            # change device status
+            if request.form['submit'] == 'Apply':
+                target_device = request.form['target_device']
+                status_mode = request.form['status_mode']
+                if target_device == "None" or status_mode == " None":
+                    error = "Select a device or status for device"
+                    return render_template('panel.html', error=error, all_data=all_data, username=username,user_list=user_list)
+                else:
+                    change_status(target_device, status_mode)
+                    error = f"status changes for device {target_device} to {status_mode}"
+                    log_page(error)
+                    return render_template('panel.html', error=error, all_data=all_data, username=username,user_list=user_list)
 
         else:
             if "username" in session:
