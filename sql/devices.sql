@@ -13,5 +13,6 @@ create table `devices` (
 	`ptp` varchar (150),
 	`models` varchar (300),
 	`os` varchar (150),
-	`status` varchar (50)
+	`status` varchar (50),
+	`time_acive` varchar (150)
 ); 
