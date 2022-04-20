@@ -18,6 +18,7 @@ all_devices = 0
 timeout_list = []
 log_data = []
 user_list = []
+timeout_list = []
 
 try:
     conn = mysql.connector.connect(host='localhost', database='roshan', user='root', password='123456')
@@ -31,20 +32,11 @@ try:
 except:
     print("Error while connecting to MySQL")
 
-try:
-    hostname = socket.gethostname()
-    local_ip = socket.gethostbyname(hostname)
-    public_ip = get('https://api.ipify.org').text
-    # print(local_ip, public_ip)
-    print(f"Server local ip {local_ip} - Public {public_ip}")
-except:
-    print("Oops, Something wrong for find ip address")
-
 # Read and make a dic from sql
 def read_from_sql():
     cursor.execute('SELECT * FROM devices')
     for row in cursor:
-        all_data[0].append({'id': row[0], 'tower_name': row[1], 'device_name': row[2], 'ip': row[3], 'ping': "", 'mode': row[4], 'models': row[5], 'os': row[6], 'status': row[7]})
+        all_data[0].append({'id': row[0], 'tower_name': row[1], 'device_name': row[2], 'ip': row[3], 'ping': "", 'mode': row[4], 'models': row[5], 'os': row[6], 'status': row[7], 'time_active' : row[8]})
         if row[7] == "enable":
             ips.insert(0, row[3])
 
@@ -181,7 +173,7 @@ def ip_format_check(device_ip):
 def add_device(new_device_name, new_device_ip, get_tower_name, get_mode, get_model):
     os = all_data[3][0].get(f"{get_model}")
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO devices (tower_name, device_name, ip, mode, models, os, status) VALUES (%s, %s, %s, %s, %s, %s, %s)", (get_tower_name, new_device_name, new_device_ip, get_mode, get_model, os, "enable"))
+    cursor.execute("INSERT INTO devices (tower_name, device_name, ip, mode, models, os, status) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", (get_tower_name, new_device_name, new_device_ip, get_mode, get_model, os, "enable", ""))
     conn.commit()
     update_radios()
 
@@ -257,6 +249,11 @@ def add_model(new_device_model, new_device_os):
 ####################################################################
 ############################ Ping start ############################
 
+def update_time_active(id, status_time_out):
+    cursor = conn.cursor()
+    cursor.execute(f"UPDATE devices SET time_active = '{status_time_out}' WHERE id = ('{id}')")
+    conn.commit()
+
 # Ping Calc
 def ping_system(ip):
     result = ping(ip, size=1, count=1)
@@ -264,9 +261,7 @@ def ping_system(ip):
         ping_data.append({'ip': ip, 'ping': "Request timeout"})
     else:
         ping_data.append({'ip': ip, 'ping': result.rtt_avg_ms})
-    
 
-# Insert ping ms in to the list all_data
 def replace():
     counter = 0
     while counter < len(ping_data):
@@ -284,7 +279,6 @@ def fto_insert(counter, finder):
         tto = time.localtime()
         tto = f'{tto[3]}{tto[4]}{tto[5]}'
         timeout_list.append({'ip': ping_data[counter]["ip"], 'time': tto})
-        # update_status()
     else:
         t = 0
         while True:
@@ -299,10 +293,12 @@ def fto_insert(counter, finder):
                 calc_time = int(tto) - (int(timeout_list[t]['time']))
                 if calc_time > 20:
                     all_data[0][finder]['ping'] = "Request timeout"
-                    if all_data[0][finder]['status'] == "":
+                    if all_data[0][finder]['time_active'] == "":
                         status_time_out = time.localtime()
                         status_time_out = f'{status_time_out[0]}/{status_time_out[1]}/{status_time_out[2]} {status_time_out[3]}:{status_time_out[4]}'
-                        all_data[0][finder]['status'] = status_time_out
+                        all_data[0][finder]['time_active'] = status_time_out
+                        id = all_data[0][finder]['id']
+                        update_time_active(id, status_time_out)
                 break
             else:
                 t = t + 1
@@ -315,7 +311,18 @@ def fto_remove(counter):
             break
         else:
             if ping_data[counter]['ip'] == timeout_list[y]['ip']:
+                for v in all_data[0]:
+                    if v['ip'] == ping_data[counter]['ip']:
+                        id = v['id']
+                        empty = ""
+                        ip = ping_data[counter]['ip']
+                        update_time_active(id, empty)
                 timeout_list.remove(timeout_list[y])
+                # for find time in all_data
+                for id, e in enumerate(all_data[0]):
+                    if e['ip'] == ip:
+                        all_data[0][id]['time_active'] = ""
+                        break
                 break
             else:
                 y = y + 1
@@ -375,7 +382,6 @@ def flask():
             update_tower_position(move_data)
         return jsonify(alldata=all_data)
 
-    
     # Login
     @app.route("/", methods=['GET', 'POST'], )
     @app.route('/login', methods=['GET', 'POST'])
@@ -654,7 +660,7 @@ def flask():
 flask_thread = threading.Thread(target=flask)
 flask_thread.start()
 
-# Sort all_data by Access points names
+# Sort all_data by device name
 def sort_data():
     all_data[0].sort(key=itemgetter('device_name'))
 
@@ -663,5 +669,5 @@ while True:
     time.sleep(t)
     results = pool.map(ping_system, ips)
     replace()
-    sort_data()
+    # sort_data()
     ping_data.clear()
