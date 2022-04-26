@@ -1,8 +1,3 @@
-  <div align="center">
-  <a href="https://github.com/pooyatavan/Roshan/actions">
-    <img src="https://img.shields.io/github/workflow/status/pooyatavan/Roshan/build?label=CI&logo=github&style=flat-square" height="20" alt="GitHub Workflow Status">
-  </a>
-  </div>
 # Introduction
 Roshan is a network monitoring Powered by Flask Framework based mostly in Python and It is completely open source; community involvement is highly encouraged. If you wish to contribute ideas or code please make pull requests to our Github repository.
 # Reporting issues
