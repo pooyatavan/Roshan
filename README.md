@@ -1,6 +1,6 @@
   <div align="center">
   <a href="https://github.com/pooyatavan/Roshan/actions">
-    <img src="https://img.shields.io/github/workflow/status/TheAlgorithms/Python/build?label=CI&logo=github&style=flat-square" height="20" alt="GitHub Workflow Status">
+    <img src="https://img.shields.io/github/workflow/status/pooyatavan/Roshan/build?label=CI&logo=github&style=flat-square" height="20" alt="GitHub Workflow Status">
   </a>
   </div>
 # Introduction
