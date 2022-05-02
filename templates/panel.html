@@ -18,25 +18,26 @@
                     <input type="text" id="radio_name" name="radio_name" placeholder="Radio name">
                     <input type="text" id="radio_ip" name="radio_ip" placeholder="IP">
                     <select id="tower-name" name="tower_name">
-                            <option value="">Choose Tower</option>
-                            {% for data in all_data[2] %}
-                            <option value="{{ data.tower_name }}">{{ data.tower_name }}</option>
-                            {% endfor %}
-                        </select>
-                        <select id="models" name="models">
-                            <option value="">Choose Model</option>
-                            {% for models in all_data[3][0] %}
-                            <option value="{{ models }}">{{ models }}</option>
-                            {% endfor %}
-                        </select>
-                        <select id="mode" name="mode">
-                            <option value="">Choose mode</option>
-                            <option value="mp">Access point</option>
-                            <option value="ptp">Point to point</option>
-                            <option value="ups">Tower UPS</option>
-                            <option value="router">Tower Router</option>
-                            <option value="ptpt">Tower backbon</option>
-                        </select>
+                        <option value="">Choose Tower</option>
+                        {% for data in all_data[2] %}
+                        <option value="{{ data.tower_name }}">{{ data.tower_name }}</option>
+                        {% endfor %}
+                    </select>
+                    <select id="models" name="models">
+                        <option value="">Choose Model</option>
+                        {% for models in all_data[3][0] %}
+                        <option value="{{ models }}">{{ models }}</option>
+                        {% endfor %}
+                    </select>
+                    <select id="mode" name="mode">
+                        <option value="">Choose mode</option>
+                        <option value="mp">Access point</option>
+                        <option value="ptp">Point to point</option>
+                        <option value="ups">Tower UPS</option>
+                        <option value="router">Tower Router</option>
+                        <option value="ptpt">Tower backbon</option>
+                    </select>
+                    <input type="text" id="area" name="area" placeholder="Area">
                     <input type="submit" value="ADD DEVICE" name="submit">
                 </div>
             </form>
@@ -44,6 +45,7 @@
             <form action="{{ url_for('add')}}" method="POST">
                 <a>Rename device</a>
                 <select id="target_radio_name" name="target_radio_name">
+                    <option value="None">Select your device</option>
                     {% for data in all_data[0] %}
                     <option value="{{ data.ap_name }}">{{ data.device_name }}</option>
                     {% endfor %}
@@ -55,6 +57,7 @@
             <form action="{{ url_for('add')}}" method="POST">
                 <a>Delete device</a>
                 <select id="target_device_name" name="target_device_name">
+                    <option value="None">Select your device</option>
                     {% for data in all_data[0] %}
                     <option value="{{ data.device_name }}">{{ data.device_name }}</option>
                     {% endfor %}
@@ -65,6 +68,7 @@
             <form action="{{ url_for('add')}}" method="POST">
                 <a>Change ip</a>
                 <select id="target_ip" name="target_ip">
+                    <option value="None">Select ip</option>
                     {% for data in all_data[0] %}
                     <option value="{{ data.ip }}">{{ data.ip }}</option>
                     {% endfor %}
@@ -72,6 +76,44 @@
                 <input type="text" id="new_ip_device" name="new_ip_device" placeholder="New IP for Device">
                 <input type="submit" value="change ip" name="submit">
             </form>
+
+            <!-- Enable/disable device-->
+            <form action="{{ url_for('add')}}" method="POST">
+                <a>Black Hole</a>
+                <select id="target_device" name="target_device">
+                    <option value="None">Choose a Device</option>
+                    {% for data in all_data[0] %}
+                    <option value="{{ data.device_name }}">{{ data.device_name }}</option>
+                    {% endfor %}
+                </select>
+                <select id="status_mode" name="status_mode">
+                    <option value="None">Select event</option>
+                    <option value="disable">Disable</option>
+                    <option value="enable">Enable</option>
+                </select>
+                <input type="submit" value="Apply" name="submit">
+            </form>
+
+            <!-- change device mode -->
+            <form action="{{ url_for('add')}}" method="POST">
+                <a>change device mode</a>
+                <select id="ch_target_device_mode" name="ch_target_device_mode">
+                    <option value="None">Choose a Device</option>
+                    {% for data in all_data[0] %}
+                    <option value="{{ data.device_name }}">{{ data.device_name }}</option>
+                    {% endfor %}
+                </select>
+                <select id="ch_device_mode" name="ch_device_mode">
+                    <option value="">Choose mode</option>
+                    <option value="mp">Access point</option>
+                    <option value="ptp">Point to point</option>
+                    <option value="ups">Tower UPS</option>
+                    <option value="router">Tower Router</option>
+                    <option value="ptpt">Tower backbon</option>
+                </select>
+                <input type="submit" value="Change mode" name="submit">
+            </form>
+
         </div>
 
         <div id="tab2" class="tabcontent">
@@ -86,7 +128,7 @@
             <form action="{{ url_for('add')}}" method="POST">
                 <a>Delete Tower</a>
                 <select id="delete" name="delete">
-                    <option value="None">None</option>
+                    <option value="None">Choose a Tower</option>
                     {% for data in all_data[2] %}
                     <option value="{{ data.tower_name }}">{{ data.tower_name }}</option>
                     {% endfor %}
@@ -97,6 +139,7 @@
             <form action="{{ url_for('add')}}" method="POST">
                 <a>Rename tower</a>
                 <select id="target_tower_name" name="target_tower_name">
+                    <option value="None">Choose a Tower</option>
                     {% for data in all_data[2] %}
                     <option value="{{ data.tower_name }}">{{ data.tower_name }}</option>
                     {% endfor %}
@@ -123,7 +166,7 @@
                 <input type="text" id="new_username" name="new_username" placeholder="USERNAME">
                 <input type="text" id="new_password" name="new_password" placeholder="PASSWORD">
                 <select id="rank" name="rank">
-                    <option value="">Choose Rank</option>
+                    <option value="None">Choose a Rank</option>
                     <option value="1">One</option>
                     <option value="2">Two</option>
                     <option value="3">Three</option>
@@ -134,14 +177,34 @@
             <form action="{{ url_for('add')}}" method="POST">
                 <a>Remove User</a>
                 <select id="target_user" name="target_user">
+                    <option value="None">Select a User</option>
                     {% for user in user_list %}
                     <option value="{{ user.username }}">{{ user.username }}</option>
                     {% endfor %}
                 </select>
                 <input type="submit" value="Remove user" name="submit">
             </form>
+
+            <!-- Change rank for user -->
+            <form action="{{ url_for('add') }}" method="POST">
+                <a>Change Rank</a>
+                <select id="target_user_rank" name="target_user_rank">
+                    <option value="None">Select a User</option>
+                    {% for user in user_list %}
+                    <option value="{{ user.username }}">{{ user.username }}</option>
+                    {% endfor %}
+                </select>
+                <select id="new_rank_user" name="new_rank_user">
+                    <option value="None">Choose a Rank</option>
+                    <option value="1">One</option>
+                    <option value="2">Two</option>
+                    <option value="3">Three</option>
+                </select>
+                <input type="submit" value="Change rank" name="submit">
+            </form>
+            
         </div>
--->
+
     </div>
     <!-- Error Log-->
     {% if error %}
