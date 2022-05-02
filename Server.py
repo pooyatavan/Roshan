@@ -1,15 +1,16 @@
 from multiprocessing.dummy import Pool as ThreadPool
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 from pythonping import ping
-import time, mysql.connector, threading, logging, socket
+import mysql.connector, threading, logging, socket, time
 from operator import itemgetter
-from requests import get
+import jyserver.Flask as jsf
 
 pool = ThreadPool(3)
-all_data = [[], [], [], [{}], [{}]]
+all_data = [[], [1920, 1080], [], [{}]]
+# [all devices] - [settings] - [towers] - [models]
 ips = []
 ping_data = []
-t = 4
+dellay = 4
 move_data = []
 add_temp = []
 users = {}
@@ -36,10 +37,10 @@ except:
 def read_from_sql():
     cursor.execute('SELECT * FROM devices')
     for row in cursor:
-        all_data[0].append({'id': row[0], 'tower_name': row[1], 'device_name': row[2], 'ip': row[3], 'ping': "", 'mode': row[4], 'models': row[5], 'os': row[6], 'status': row[7], 'time_active' : row[8]})
+        all_data[0].append({'id': row[0], 'tower_name': row[1], 'device_name': row[2], 'ip': row[3], 'ping': "", 'mode': row[4], 'models': row[5], 'os': row[6], 'status': row[7], 'time_active' : row[8], 'area': row[9]})
         if row[7] == "enable":
             ips.insert(0, row[3])
-
+        
     # make dictionary from towers name
     cursor.execute('SELECT * FROM towers')
     for row in cursor:
@@ -170,10 +171,10 @@ def ip_format_check(device_ip):
         return False
 
 # Add device
-def add_device(new_device_name, new_device_ip, get_tower_name, get_mode, get_model):
+def add_device(new_device_name, new_device_ip, get_tower_name, get_mode, get_model, area):
     os = all_data[3][0].get(f"{get_model}")
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO devices (tower_name, device_name, ip, mode, models, os, status) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", (get_tower_name, new_device_name, new_device_ip, get_mode, get_model, os, "enable", ""))
+    cursor.execute("INSERT INTO devices (tower_name, device_name, ip, mode, models, os, status, time_active, area) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)", (get_tower_name, new_device_name, new_device_ip, get_mode, get_model, os, "enable", "", area))
     conn.commit()
     update_radios()
 
@@ -207,7 +208,7 @@ def update_radios():
     ips = []
     cursor.execute('SELECT * FROM devices')
     for row in cursor:
-        all_data[0].append({'id': row[0], 'tower_name': row[1], 'device_name': row[2], 'ip': row[3], 'ping': "", 'mode': row[4], 'models': row[5], 'os': row[6], 'status': row[7]})
+        all_data[0].append({'id': row[0], 'tower_name': row[1], 'device_name': row[2], 'ip': row[3], 'ping': "", 'mode': row[4], 'models': row[5], 'os': row[6], 'status': row[7], 'time_active' : row[8], 'area': row[9]})
         if row[7] == "enable":
             ips.insert(0, row[3])
 
@@ -231,6 +232,13 @@ def change_status(target_device, status_mode):
     cursor.execute(f"UPDATE devices SET status = '{status_mode}' WHERE device_name = ('{target_device}')")
     conn.commit()
     update_radios()
+
+def change_mode(ch_target_device_mode, ch_device_mode):
+    cursor = conn.cursor()
+    cursor.execute(f"UPDATE devices SET mode = '{ch_device_mode}' WHERE device_name = ('{ch_target_device_mode}')")
+    conn.commit()
+    update_radios()
+
 ############################ Device end #############################
 #####################################################################
 ############################ Model start ############################
@@ -365,6 +373,12 @@ def remove_user(target_user):
     conn.commit()
     user_list_update()
 
+def change_rank(target_user_rank, new_rank_user):
+    cursor = conn.cursor()
+    cursor.execute(f"UPDATE users SET rank_user = '{new_rank_user}' WHERE username = ('{target_user_rank}')")
+    conn.commit()
+    user_list_update()
+
 ############################ User end ###############################
 #####################################################################
 
@@ -383,7 +397,7 @@ def flask():
         return jsonify(alldata=all_data)
 
     # Login
-    @app.route("/", methods=['GET', 'POST'], )
+    @app.route("/", methods=['GET', 'POST'])
     @app.route('/login', methods=['GET', 'POST'])
     def login():
         error = None
@@ -405,10 +419,10 @@ def flask():
                 return redirect(url_for('solar'))
         return render_template('login.html', error=error, alldata=all_data)
 
+   # for naughty users
     @app.errorhandler(404)
     def page_not_found(e):
         return render_template('wrong-page.html'), 404
-
     app.register_error_handler(404, page_not_found)
 
     # Solar page
@@ -466,7 +480,7 @@ def flask():
         else:
             return redirect(url_for('login'))
 
-    # Add
+    # panel
     @app.route("/panel", methods=['POST', 'GET'])
     def add():
         error = None
@@ -498,7 +512,8 @@ def flask():
                 get_tower_name = request.form['tower_name']
                 get_mode = request.form['mode']
                 get_model = request.form['models']
-                if "" in (new_device_name, new_device_ip, get_tower_name, get_mode, get_model):
+                area = request.form['area']
+                if "" in (new_device_name, new_device_ip, get_tower_name, get_mode, get_model, area):
                     error = 'One of these fields are empty'
                     return render_template('panel.html', error=error, all_data=all_data, username=username, user_list=user_list)
                 else:
@@ -507,7 +522,7 @@ def flask():
                         return render_template('panel.html', error=error, all_data=all_data, username=username, user_list=user_list)
                     else:
                         if ip_format_check(new_device_ip) == True:
-                            add_device(new_device_name, new_device_ip, get_tower_name, get_mode, get_model)
+                            add_device(new_device_name, new_device_ip, get_tower_name, get_mode, get_model, area)
                             error = f'device name {new_device_name} whit ip {new_device_ip} successfully added'
                             log_page(error)
                             return render_template('panel.html', error=error, all_data=all_data, username=username, user_list=user_list)
@@ -610,6 +625,19 @@ def flask():
                     error = f'User {target_user} deleted'
                     log_page(error)
                     return render_template('panel.html', error=error, all_data=all_data, username=username,user_list=user_list)
+            
+            # change rank for user
+            if request.form['submit'] == 'Change rank':
+                target_user_rank = request.form['target_user_rank']
+                new_rank_user = request.form['new_rank_user']
+                if target_user_rank == "None" or new_rank_user == "None":
+                    error = "select a user or rank"
+                    return render_template('panel.html', error=error, all_data=all_data, username=username, user_list=user_list)
+                else:
+                    change_rank(target_user_rank, new_rank_user)
+                    error = f'User rank {target_user_rank} changed to {new_rank_user}'
+                    log_page(error)
+                    return render_template('panel.html', error=error, all_data=all_data, username=username, user_list=user_list)
 
             # change device ip
             if request.form['submit'] == 'change ip':
@@ -640,6 +668,19 @@ def flask():
                     log_page(error)
                     return render_template('panel.html', error=error, all_data=all_data, username=username,user_list=user_list)
 
+            # change device mode
+            if request.form['submit'] == 'Change mode':
+                ch_target_device_mode = request.form['ch_target_device_mode']
+                ch_device_mode = request.form['ch_device_mode']
+                if ch_target_device_mode == "None" or ch_device_mode == "None":
+                    error = "Select a device or mode for make changes"
+                    return render_template('panel.html', error=error, all_data=all_data, username=username,user_list=user_list)
+                else:
+                    change_mode(ch_target_device_mode, ch_device_mode)
+                    error = f"{ch_device_mode} mode changed to {ch_device_mode}"
+                    log_page(error)
+                    return render_template('panel.html', error=error, all_data=all_data, username=username,user_list=user_list)
+
         else:
             if "username" in session:
                 username = session["username"]
@@ -666,7 +707,7 @@ def sort_data():
 
 # Loop calc
 while True:
-    time.sleep(t)
+    time.sleep(dellay)
     results = pool.map(ping_system, ips)
     replace()
     # sort_data()
