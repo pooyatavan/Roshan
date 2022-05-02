@@ -4,9 +4,15 @@
 var $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 </script>
 <title>Roshan - Solar</title>
-<body onload="screen()">
-    <script type="text/javascript" src="{{ url_for('static', filename='js/solar.js')}}" data-turbolinks-track="reload"></script>
-    <div id="containment-wrapper">
+
+<body onload="screen()" style="overflow: hidden;">
+    <div class="save">
+        <button class="save_btn" id="reset"><i class="fa-solid fa-arrow-rotate-left"></i></button>
+        <button class="save_btn" id="zoom-out"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+        <button class="save_btn" id="zoom-in"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
     </div>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/solar.js')}}" data-turbolinks-track="reload"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/panzoom.js')}}" data-turbolinks-track="reload"></script>
+    <div id="panzoom"></div>
 </body>
 {% endblock content %}
