@@ -4,10 +4,7 @@
 <style>.draggable {cursor:move;}</style>
 <script type=text/javascript>$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};</script>
 <body onload="screen()">
-<script type="text/javascript" src="{{ url_for('static', filename='js/move.js')}}" data-turbolinks-track="reload"></script>
-<div class="save"><button class="save_btn" onclick="save()"><i class="fa-solid fa-circle-check"></i></button></div>
-
-    <div id="containment-wrapper">
-    </div>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/move.js')}}" data-turbolinks-track="reload"></script>
+    <div class="save"><button class="save_btn" onclick="save()"><i class="fa-solid fa-circle-check"></i></button></div>
 </body>
 {% endblock content %}
