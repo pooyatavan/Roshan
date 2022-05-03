@@ -477,7 +477,7 @@ h1 {
     height: 100%;
     overflow: auto;
     position: relative;
-    top: 2px;
+    
 }
 
 .table-wrapper{
@@ -491,7 +491,7 @@ h1 {
     border-collapse: collapse;
     width: 100%;
     max-width: 100%;
-    background-color: white;
+    background-color: rgb(31, 31, 31);
 }
 
 .fl-table td, .fl-table th {
@@ -500,9 +500,9 @@ h1 {
 }
 
 .fl-table td {
-    border-right: 1px solid #f8f8f8;
+    border-right: 1px solid #242424;
     font-size: 14px;
-    color: black;
+    color: rgb(255, 255, 255);
 }
 
 .fl-table thead th {
@@ -514,12 +514,12 @@ h1 {
 .fl-table thead th:nth-child(odd) {
     color: #ffffff;
     background-color: #272727;
-    border-right: 1px #e7e7e7 solid;
+    border-right: 1px #3a3a3a solid;
     width: 300px;
 }
 
 .fl-table tr:nth-child(even) {
-    background: #F8F8F8;
+    background: #363636;
 }
 /* Log */
 
