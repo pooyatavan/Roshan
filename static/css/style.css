@@ -56,7 +56,6 @@ body {
 .sidebar a:hover {
     background-color: #4D5CC3;
     color: white;
-    border-radius: 100%;
 }
 .sidebar a:nth-child(7) {
     bottom: 0;

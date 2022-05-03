@@ -1,6 +1,4 @@
 from multiprocessing.dummy import Pool as ThreadPool
-from tracemalloc import start
-from click import argument
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 from pythonping import ping
 import mysql.connector, threading, logging, socket, time
@@ -474,9 +472,17 @@ def flask():
         else:
             return redirect(url_for('login'))
 
+    # SSH Section
+    @app.route("/ssh", methods=['POST', 'GET'])
+    def ssh():
+        if "username" in session:
+            return render_template("ssh.html")
+        else:
+            return redirect(url_for('login'))
+
     # panel
     @app.route("/panel", methods=['POST', 'GET'])
-    def add():
+    def panel():
         error = None
         global username
         global user_list
@@ -697,33 +703,36 @@ def console():
     print("Type .help command name")
     while True:
         command = input("Command me: ")
-        if command == ".help":
-            for help in help_command:
-                print(help)
-        else:
-            if command.split()[0] == ".register":
-                if (len(command.split())) == 6:
-                    print(user_register(command.split()[5], command.split()[1], command.split()[2], command.split()[3], command.split()[4], users))
-                    user_list_update()
-                else:
-                    print(".register [firstname] [lastname] [username] [passsword] [rank 1-3]")
-            if command.split()[0] == ".changerank":
-                if (len(command.split())) == 3:
-                    if int(command.split()[2]) in range(1, 4, 1):
-                        change_rank(command.split()[1], command.split()[2])
+        try:
+            if command == ".help":
+                for help in help_command:
+                    print(help)
+            else:
+                if command.split()[0] == ".register":
+                    if (len(command.split())) == 6:
+                        print(user_register(command.split()[5], command.split()[1], command.split()[2], command.split()[3], command.split()[4], users))
+                        user_list_update()
                     else:
-                        print("rank number is not in range")
-                else:
-                    print(".change-rank [user target] [user rank]")
-            if command.split()[0] == ".reload":
-                if command.split()[1] == "devices":
-                    update_devices()
-
+                        print(".register [firstname] [lastname] [username] [passsword] [rank 1-3]")
+                if command.split()[0] == ".changerank":
+                    if (len(command.split())) == 3:
+                        if int(command.split()[2]) in range(1, 4, 1):
+                            change_rank(command.split()[1], command.split()[2])
+                        else:
+                            print("rank number is not in range")
+                    else:
+                        print(".change-rank [user target] [user rank]")
+                if command.split()[0] == ".reload":
+                    if command.split()[1] == "devices":
+                        update_devices()
+        except:
+            print('Command does not exist')
+            
 # flask start thread section
 flask_thread = threading.Thread(target=flask)
 flask_thread.start()
 
-# Console Command
+# Console Command thread
 console_thread = threading.Thread(target=console)
 console_thread.start()
 
