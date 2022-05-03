@@ -1,9 +1,9 @@
 from multiprocessing.dummy import Pool as ThreadPool
+from tracemalloc import start
+from click import argument
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 from pythonping import ping
-import mysql.connector, threading, logging, socket, time
-from operator import itemgetter
-import jyserver.Flask as jsf
+import mysql.connector, threading, logging, socket, time, typer
 
 pool = ThreadPool(3)
 all_data = [[], [1920, 1080], [], [{}]]
@@ -121,7 +121,7 @@ def edit_tower_name(target, new):
     cursor.execute(f"UPDATE devices SET tower_name = '{new}' WHERE tower_name = ('{target}')")
     conn.commit()
     update_towers()
-    update_radios()
+    update_devices()
 
 # Delete tower
 def delete_tower(delete_tower_name):
@@ -176,7 +176,7 @@ def add_device(new_device_name, new_device_ip, get_tower_name, get_mode, get_mod
     cursor = conn.cursor()
     cursor.execute("INSERT INTO devices (tower_name, device_name, ip, mode, models, os, status, time_active, area) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)", (get_tower_name, new_device_name, new_device_ip, get_mode, get_model, os, "enable", "", area))
     conn.commit()
-    update_radios()
+    update_devices()
 
 # check device name for allready exist
 def check_device_name(new_device_name):
@@ -199,10 +199,10 @@ def edit_device_name(new_device_name, target_device_name):
     cursor = conn.cursor()
     cursor.execute(f"UPDATE devices SET device_name = '{new_device_name}' WHERE device_name = ('{target_device_name}')")
     conn.commit()
-    update_radios()
+    update_devices()
 
 # Update device list
-def update_radios():
+def update_devices():
     global ips
     all_data[0] = []
     ips = []
@@ -217,27 +217,27 @@ def delete_device(delete_devive_name):
     cursor = conn.cursor()
     cursor.execute(f"DELETE FROM devices WHERE device_name = '{delete_devive_name}'")
     conn.commit()
-    update_radios()
+    update_devices()
 
 # change device ip
 def change_ip(new_ip, target_ip):
     cursor = conn.cursor()
     cursor.execute(f"UPDATE devices SET ip = '{new_ip}' WHERE ip = ('{target_ip}')")
     conn.commit()
-    update_radios()
+    update_devices()
 
 # change status mode for device
 def change_status(target_device, status_mode):
     cursor = conn.cursor()
     cursor.execute(f"UPDATE devices SET status = '{status_mode}' WHERE device_name = ('{target_device}')")
     conn.commit()
-    update_radios()
+    update_devices()
 
 def change_mode(ch_target_device_mode, ch_device_mode):
     cursor = conn.cursor()
     cursor.execute(f"UPDATE devices SET mode = '{ch_device_mode}' WHERE device_name = ('{ch_target_device_mode}')")
     conn.commit()
-    update_radios()
+    update_devices()
 
 ############################ Device end #############################
 #####################################################################
@@ -313,27 +313,21 @@ def fto_insert(counter, finder):
 
 # remove from timeout_list
 def fto_remove(counter):
-    y = 0
-    while True:
-        if y >= len(timeout_list):
+    for tol_id, tol in enumerate(timeout_list):
+        if ping_data[counter]['ip'] == timeout_list[tol_id]['ip']:
+            for v in all_data[0]:
+                if v['ip'] == ping_data[counter]['ip']:
+                    id = v['id']
+                    empty = ""
+                    ip = ping_data[counter]['ip']
+                    update_time_active(id, empty)
+            timeout_list.remove(timeout_list[tol_id])
+            # for find time in all_data
+            for id, e in enumerate(all_data[0]):
+                if e['ip'] == ip:
+                    all_data[0][id]['time_active'] = ""
+                    break
             break
-        else:
-            if ping_data[counter]['ip'] == timeout_list[y]['ip']:
-                for v in all_data[0]:
-                    if v['ip'] == ping_data[counter]['ip']:
-                        id = v['id']
-                        empty = ""
-                        ip = ping_data[counter]['ip']
-                        update_time_active(id, empty)
-                timeout_list.remove(timeout_list[y])
-                # for find time in all_data
-                for id, e in enumerate(all_data[0]):
-                    if e['ip'] == ip:
-                        all_data[0][id]['time_active'] = ""
-                        break
-                break
-            else:
-                y = y + 1
 
 ############################ Ping end ##############################
 ####################################################################
@@ -697,9 +691,41 @@ def flask():
         from waitress import serve
         serve(app, host="192.168.3.20", port=80)
 
+# command console
+def console():
+    help_command = [".register [firstname] [lastname] [username] [passsword] [rank 1-3 (1-User | 2-ban | 3-God)]", ".changerank [user target] [rank 1-3 (1-User | 2-Ban | 3-God)]", ".reload [database]"]
+    print("Type .help command name")
+    while True:
+        command = input("Command me: ")
+        if command == ".help":
+            for help in help_command:
+                print(help)
+        else:
+            if command.split()[0] == ".register":
+                if (len(command.split())) == 6:
+                    print(user_register(command.split()[5], command.split()[1], command.split()[2], command.split()[3], command.split()[4], users))
+                    user_list_update()
+                else:
+                    print(".register [firstname] [lastname] [username] [passsword] [rank 1-3]")
+            if command.split()[0] == ".changerank":
+                if (len(command.split())) == 3:
+                    if int(command.split()[2]) in range(1, 4, 1):
+                        change_rank(command.split()[1], command.split()[2])
+                    else:
+                        print("rank number is not in range")
+                else:
+                    print(".change-rank [user target] [user rank]")
+            if command.split()[0] == ".reload":
+                if command.split()[1] == "devices":
+                    update_devices()
+
 # flask start thread section
 flask_thread = threading.Thread(target=flask)
 flask_thread.start()
+
+# Console Command
+console_thread = threading.Thread(target=console)
+console_thread.start()
 
 # Sort all_data by device name
 def sort_data():
