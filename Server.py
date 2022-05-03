@@ -3,7 +3,7 @@ from tracemalloc import start
 from click import argument
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 from pythonping import ping
-import mysql.connector, threading, logging, socket, time, typer
+import mysql.connector, threading, logging, socket, time
 
 pool = ThreadPool(3)
 all_data = [[], [1920, 1080], [], [{}]]
@@ -727,14 +727,9 @@ flask_thread.start()
 console_thread = threading.Thread(target=console)
 console_thread.start()
 
-# Sort all_data by device name
-def sort_data():
-    all_data[0].sort(key=itemgetter('device_name'))
-
 # Loop calc
 while True:
     time.sleep(dellay)
     results = pool.map(ping_system, ips)
     replace()
-    # sort_data()
     ping_data.clear()
