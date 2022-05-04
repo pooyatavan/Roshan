@@ -12,7 +12,7 @@
 
         <div id="tab1" class="tabcontent">
             <!-- Add new device-->
-            <form action="{{ url_for('add')}}" method="POST">
+            <form action="{{url_for('panel')}}" method="POST">
                 <a>Add New Device</a>
                 <div class="row">
                     <input type="text" id="radio_name" name="radio_name" placeholder="Radio name">
@@ -42,19 +42,19 @@
                 </div>
             </form>
             <!-- Rename device -->
-            <form action="{{ url_for('add')}}" method="POST">
+            <form action="{{url_for('panel')}}" method="POST">
                 <a>Rename device</a>
                 <select id="target_radio_name" name="target_radio_name">
                     <option value="None">Select your device</option>
                     {% for data in all_data[0] %}
-                    <option value="{{ data.ap_name }}">{{ data.device_name }}</option>
+                    <option value="{{ data.device_name }}">{{ data.device_name }}</option>
                     {% endfor %}
                 </select>
                 <input type="text" id="new_radio_name" name="new_radio_name" placeholder="New radio name">
                 <input type="submit" value="Change radio name" name="submit">
             </form>
             <!-- Delete device -->
-            <form action="{{ url_for('add')}}" method="POST">
+            <form action="{{url_for('panel')}}" method="POST">
                 <a>Delete device</a>
                 <select id="target_device_name" name="target_device_name">
                     <option value="None">Select your device</option>
@@ -65,7 +65,7 @@
                 <input type="submit" value="Delete device name" name="submit">
             </form>
             <!-- Change IP -->
-            <form action="{{ url_for('add')}}" method="POST">
+            <form action="{{url_for('panel')}}" method="POST">
                 <a>Change ip</a>
                 <select id="target_ip" name="target_ip">
                     <option value="None">Select ip</option>
@@ -78,7 +78,7 @@
             </form>
 
             <!-- Enable/disable device-->
-            <form action="{{ url_for('add')}}" method="POST">
+            <form action="{{url_for('panel')}}" method="POST">
                 <a>Black Hole</a>
                 <select id="target_device" name="target_device">
                     <option value="None">Choose a Device</option>
@@ -95,7 +95,7 @@
             </form>
 
             <!-- change device mode -->
-            <form action="{{ url_for('add')}}" method="POST">
+            <form action="{{url_for('panel')}}" method="POST">
                 <a>change device mode</a>
                 <select id="ch_target_device_mode" name="ch_target_device_mode">
                     <option value="None">Choose a Device</option>
@@ -118,14 +118,14 @@
 
         <div id="tab2" class="tabcontent">
             <!-- Add Tower -->
-            <form action="{{ url_for('add')}}" method="POST">
+            <form action="{{url_for('panel')}}" method="POST">
                 <a>Add Tower</a>
                 <input type="text" id="tower_name" name="tower_name" placeholder="Tower name">
                 <input type="text" id="address" name="address" placeholder="address">
                 <input type="submit" value="Add Tower" name="submit">
             </form>
             <!-- Delete Tower -->
-            <form action="{{ url_for('add')}}" method="POST">
+            <form action="{{url_for('panel')}}" method="POST">
                 <a>Delete Tower</a>
                 <select id="delete" name="delete">
                     <option value="None">Choose a Tower</option>
@@ -136,7 +136,7 @@
                 <input type="submit" value="Delete Tower" name="submit">
             </form>
             <!-- Rename tower -->
-            <form action="{{ url_for('add')}}" method="POST">
+            <form action="{{url_for('panel')}}" method="POST">
                 <a>Rename tower</a>
                 <select id="target_tower_name" name="target_tower_name">
                     <option value="None">Choose a Tower</option>
@@ -150,7 +150,7 @@
         </div>
         <!-- Device model -->
         <div id="tab3" class="tabcontent">
-            <form action="{{ url_for('add')}}" method="POST">
+            <form action="{{ url_for('panel')}}" method="POST">
                 <input type="text" id="device_model" name="device_model" placeholder="Device model name">
                 <input type="text" id="device_os" name="device_os" placeholder="Device OS">
                 <input type="submit" value="add device model" name="submit">
@@ -159,7 +159,7 @@
         <!-- User -->
         <div id="tab4" class="tabcontent">
             <!-- Register -->
-            <form action="{{ url_for('add')}}" method="POST">
+            <form action="{{url_for('panel')}}" method="POST">
                 <a>Register</a>
                 <input type="text" id="firstname" name="firstname" placeholder="FIRSTNAME">
                 <input type="text" id="lastname" name="lastname" placeholder="LASTNAME">
@@ -174,7 +174,7 @@
                 <input type="submit" value="REGISTER" name="submit">
             </form>
             <!-- Remove user -->
-            <form action="{{ url_for('add')}}" method="POST">
+            <form action="{{url_for('panel')}}" method="POST">
                 <a>Remove User</a>
                 <select id="target_user" name="target_user">
                     <option value="None">Select a User</option>
@@ -186,7 +186,7 @@
             </form>
 
             <!-- Change rank for user -->
-            <form action="{{ url_for('add') }}" method="POST">
+            <form action="{{url_for('panel')}}" method="POST">
                 <a>Change Rank</a>
                 <select id="target_user_rank" name="target_user_rank">
                     <option value="None">Select a User</option>

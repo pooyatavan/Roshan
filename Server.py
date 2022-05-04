@@ -31,6 +31,20 @@ try:
 except:
     print("Error while connecting to MySQL")
 
+# Update sql structure
+class update:
+    def __init__(self, table_name, table_set, new, table_where, target):
+        self.table_name = table_name
+        self.table_set = table_set
+        self.new = new
+        self.table_where = table_where
+        self.target = target
+    
+    def update_sql(self, conn):
+        cursor = conn.cursor()
+        cursor.execute(f"UPDATE {self.table_name} SET {self.table_set} = '{self.new}' WHERE {self.table_where} = ('{self.target}')")
+        conn.commit()
+
 # Read and make a dic from sql
 def read_from_sql():
     cursor.execute('SELECT * FROM devices')
@@ -112,15 +126,6 @@ def create_tower(add_tower_name, new_tower_address):
     sort_towers_id()
     update_towers()
 
-# Edit tower name
-def edit_tower_name(target, new):
-    cursor = conn.cursor()
-    cursor.execute(f"UPDATE towers SET tower_name = '{new}' WHERE tower_name = ('{target}')")
-    cursor.execute(f"UPDATE devices SET tower_name = '{new}' WHERE tower_name = ('{target}')")
-    conn.commit()
-    update_towers()
-    update_devices()
-
 # Delete tower
 def delete_tower(delete_tower_name):
     cursor = conn.cursor()
@@ -191,13 +196,6 @@ def check_ip_exist(new_ip):
             return True
         else:
             return False
-
-# Edit device name
-def edit_device_name(new_device_name, target_device_name):
-    cursor = conn.cursor()
-    cursor.execute(f"UPDATE devices SET device_name = '{new_device_name}' WHERE device_name = ('{target_device_name}')")
-    conn.commit()
-    update_devices()
 
 # Update device list
 def update_devices():
@@ -563,8 +561,14 @@ def flask():
                     return render_template('panel.html', error=error, all_data=all_data, username=username, user_list=user_list)
                 else:
                     if check_tower_name(new_tower_name) == False:
-                        edit_tower_name(target_tower_name, new_tower_name)
+                        update_command = update("towers", "tower_name", new_tower_name, "tower_name", target_tower_name)
+                        update_command.update_sql(conn)
+                        update_command = update("devices", "tower_name", new_tower_name, "tower_name", target_tower_name)
+                        update_command.update_sql(conn)
+                        update_towers()
+                        update_devices()
                         error = f"Successfully changed from {target_tower_name} to {new_tower_name}"
+                        log_page(error)
                         return render_template('panel.html', error=error, all_data=all_data, username=username, user_list=user_list)
                     else:
                         error = f'{new_tower_name} is all ready exist'
@@ -582,8 +586,11 @@ def flask():
                             error = f'{new_device_name} is all ready exist'
                             return render_template('panel.html', error=error, all_data=all_data, username=username, user_list=user_list)
                     else:
+                        update_command = update("devices", "device_name", new_device_name, "device_name", target_device_name)
+                        update_command.update_sql(conn)
+                        update_devices()
                         error = f"Successfully changed from {target_device_name} to {new_device_name}"
-                        edit_device_name(new_device_name, target_device_name)
+                        log_page(error)
                         return render_template('panel.html', error=error, all_data=all_data, username=username, user_list=user_list)
 
             # Add device model and os
