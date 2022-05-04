@@ -33,12 +33,12 @@ except:
 
 # Update sql structure
 class update:
-    def __init__(self, table_name, table_set, new, table_where, target):
+    def __init__(self, table_name, table_set, new_variable, table_variable_where, target_variable):
         self.table_name = table_name
         self.table_set = table_set
-        self.new = new
-        self.table_where = table_where
-        self.target = target
+        self.new_variable = new_variable
+        self.table_variable_where = table_variable_where
+        self.target_variable = target_variable
     
     def update_sql(self, conn):
         cursor = conn.cursor()
@@ -113,8 +113,8 @@ def sort_towers_id():
         list_old.append(data['id'])
     counter = 1
     for qw in list_old:
-        cursor.execute(f"UPDATE towers SET id = '{counter}' WHERE id = ('{qw}')")
-        conn.commit()
+        update_command = update("towers", "id", counter, "id", qw)
+        update_command.update_sql(conn)
         counter = counter + 1
 
 # Create towers
@@ -215,23 +215,10 @@ def delete_device(delete_devive_name):
     conn.commit()
     update_devices()
 
-# change device ip
-def change_ip(new_ip, target_ip):
-    cursor = conn.cursor()
-    cursor.execute(f"UPDATE devices SET ip = '{new_ip}' WHERE ip = ('{target_ip}')")
-    conn.commit()
-    update_devices()
-
 # change status mode for device
 def change_status(target_device, status_mode):
     cursor = conn.cursor()
     cursor.execute(f"UPDATE devices SET status = '{status_mode}' WHERE device_name = ('{target_device}')")
-    conn.commit()
-    update_devices()
-
-def change_mode(ch_target_device_mode, ch_device_mode):
-    cursor = conn.cursor()
-    cursor.execute(f"UPDATE devices SET mode = '{ch_device_mode}' WHERE device_name = ('{ch_target_device_mode}')")
     conn.commit()
     update_devices()
 
@@ -360,12 +347,6 @@ def user_check_rank(username_ch, users):
 def remove_user(target_user):
     cursor = conn.cursor()
     cursor.execute(f"DELETE FROM users WHERE username = '{target_user}'")
-    conn.commit()
-    user_list_update()
-
-def change_rank(target_user_rank, new_rank_user):
-    cursor = conn.cursor()
-    cursor.execute(f"UPDATE users SET rank_user = '{new_rank_user}' WHERE username = ('{target_user_rank}')")
     conn.commit()
     user_list_update()
 
@@ -641,8 +622,10 @@ def flask():
                     error = "select a user or rank"
                     return render_template('panel.html', error=error, all_data=all_data, username=username, user_list=user_list)
                 else:
-                    change_rank(target_user_rank, new_rank_user)
-                    error = f'User rank {target_user_rank} changed to {new_rank_user}'
+                    update_command = update("users", "rank_user", new_rank_user, "username", target_user_rank)
+                    update_command.update_sql(conn)
+                    user_list_update()
+                    error = f'User rank changed from {target_user_rank} to {new_rank_user}'
                     log_page(error)
                     return render_template('panel.html', error=error, all_data=all_data, username=username, user_list=user_list)
 
@@ -659,7 +642,11 @@ def flask():
                             error = f"{new_ip} is allready exist"
                             return render_template('panel.html', error=error, all_data=all_data, username=username,user_list=user_list)
                         else:
-                            change_ip(new_ip, target_ip)
+                            update_command = update("devices", "ip", new_ip, "ip", target_ip)
+                            update_command.update_sql(conn)
+                            update_devices()
+                            error = f"device ip changed from {target_ip} to {new_ip}"
+                            log_page(error)
                             return render_template('panel.html', error=error, all_data=all_data, username=username,user_list=user_list)
 
             # change device status
@@ -683,7 +670,9 @@ def flask():
                     error = "Select a device or mode for make changes"
                     return render_template('panel.html', error=error, all_data=all_data, username=username,user_list=user_list)
                 else:
-                    change_mode(ch_target_device_mode, ch_device_mode)
+                    update_command = update("devices", "mode", ch_device_mode, "device_name", ch_target_device_mode)
+                    update_command.update_sql(conn)
+                    update_devices()
                     error = f"{ch_device_mode} mode changed to {ch_device_mode}"
                     log_page(error)
                     return render_template('panel.html', error=error, all_data=all_data, username=username,user_list=user_list)
@@ -724,7 +713,9 @@ def console():
                 if command.split()[0] == ".changerank":
                     if (len(command.split())) == 3:
                         if int(command.split()[2]) in range(1, 4, 1):
-                            change_rank(command.split()[1], command.split()[2])
+                            update_command = update("users", "rank_user", command.split()[2], "username", command.split()[1])
+                            update_command.update_sql(conn)
+                            user_list_update()
                         else:
                             print("rank number is not in range")
                     else:
