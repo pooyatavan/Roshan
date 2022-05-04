@@ -42,7 +42,18 @@ class update:
     
     def update_sql(self, conn):
         cursor = conn.cursor()
-        cursor.execute(f"UPDATE {self.table_name} SET {self.table_set} = '{self.new}' WHERE {self.table_where} = ('{self.target}')")
+        cursor.execute(f"UPDATE {self.table_name} SET {self.table_set} = '{self.new_variable}' WHERE {self.table_variable_where} = ('{self.target_variable}')")
+        conn.commit()
+
+class delete:
+    def __init__(self, from_table, where_field, target_name):
+        self.from_table = from_table
+        self.where_field = where_field
+        self.target_field = target_name
+    
+    def delete_sql(self, conn):
+        cursor = conn.cursor()
+        cursor.execute(f"DELETE FROM {self.from_table} WHERE {self.where_field} = '{self.target_field}'")
         conn.commit()
 
 # Read and make a dic from sql
@@ -126,15 +137,6 @@ def create_tower(add_tower_name, new_tower_address):
     sort_towers_id()
     update_towers()
 
-# Delete tower
-def delete_tower(delete_tower_name):
-    cursor = conn.cursor()
-    cursor.execute(f"DELETE FROM towers WHERE tower_name = '{delete_tower_name}'")
-    conn.commit()
-    update_towers()
-    sort_towers_id()
-    update_towers()
-
 # Update tower position
 def update_tower_position(move_data):
     u = 0
@@ -207,13 +209,6 @@ def update_devices():
         all_data[0].append({'id': row[0], 'tower_name': row[1], 'device_name': row[2], 'ip': row[3], 'ping': "", 'mode': row[4], 'models': row[5], 'os': row[6], 'status': row[7], 'time_active' : row[8], 'area': row[9]})
         if row[7] == "enable":
             ips.insert(0, row[3])
-
-# delete device name
-def delete_device(delete_devive_name):
-    cursor = conn.cursor()
-    cursor.execute(f"DELETE FROM devices WHERE device_name = '{delete_devive_name}'")
-    conn.commit()
-    update_devices()
 
 # change status mode for device
 def change_status(target_device, status_mode):
@@ -343,12 +338,6 @@ def user_check_rank(username_ch, users):
             return False
         else:
             return True
-
-def remove_user(target_user):
-    cursor = conn.cursor()
-    cursor.execute(f"DELETE FROM users WHERE username = '{target_user}'")
-    conn.commit()
-    user_list_update()
 
 ############################ User end ###############################
 #####################################################################
@@ -516,7 +505,9 @@ def flask():
                     error = f"choose a device name"
                     return render_template('panel.html', error=error, all_data=all_data, username=username, user_list=user_list)
                 else:
-                    delete_device(delete_devive_name)
+                    delete_command = delete("devices", "device_name", delete_devive_name)
+                    delete_command.delete_sql(conn)
+                    update_devices()
                     error = f"device {delete_devive_name} deleted Successfully"
                     log_page(error)
                     return render_template('panel.html', error=error, all_data=all_data, username=username, user_list=user_list)
@@ -529,7 +520,12 @@ def flask():
                     return render_template('panel.html', error=error, all_data=all_data, username=username, user_list=user_list)
                 else:
                     error = f"{delete_tower_name} deleted Successfully"
-                    delete_tower(delete_tower_name)
+                    delete_command = delete("towers", "tower_name", delete_tower_name)
+                    delete_command.delete_sql(conn)
+                    update_devices()
+                    update_towers()
+                    sort_towers_id()
+                    update_towers()
                     log_page(error)
                     return render_template('panel.html', error=error, all_data=all_data, username=username, user_list=user_list)
 
@@ -609,7 +605,9 @@ def flask():
                     error = "Select a user to remove"
                     return render_template('panel.html', error=error, all_data=all_data, username=username,user_list=user_list)
                 else:
-                    remove_user(target_user)
+                    delete_command = delete("users", "username", {target_user})
+                    delete_command.delete_sql(conn)
+                    user_list_update()
                     error = f'User {target_user} deleted'
                     log_page(error)
                     return render_template('panel.html', error=error, all_data=all_data, username=username,user_list=user_list)
