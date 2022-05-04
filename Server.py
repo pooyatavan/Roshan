@@ -45,6 +45,7 @@ class update:
         cursor.execute(f"UPDATE {self.table_name} SET {self.table_set} = '{self.new_variable}' WHERE {self.table_variable_where} = ('{self.target_variable}')")
         conn.commit()
 
+# Delete sql structure
 class delete:
     def __init__(self, from_table, where_field, target_name):
         self.from_table = from_table
@@ -139,19 +140,12 @@ def create_tower(add_tower_name, new_tower_address):
 
 # Update tower position
 def update_tower_position(move_data):
-    u = 0
-    p = 1
-    cursor = conn.cursor()
-    while True:
-        if len(move_data) == u:
-            move_data = []
-            update_towers()
-            break
-        else:
-            cursor.execute(f" UPDATE towers SET top_pos = '{move_data[u].get('top')}', left_pos = '{move_data[u].get('left')}' WHERE Id = {str(p)} ")
-            p = p + 1
-            u = u + 1
-            conn.commit()
+    for tower_position in move_data:
+        cursor = conn.cursor()
+        cursor.execute(f" UPDATE towers SET top_pos = '{tower_position.get('top')}', left_pos = '{tower_position.get('left')}' WHERE Id = {tower_position.get('id')} ")
+        conn.commit()
+        update_towers()
+        move_data = []
 
 def check_tower_name(new_tower_name):
     if len(all_data[2]) == 0:
@@ -209,13 +203,6 @@ def update_devices():
         all_data[0].append({'id': row[0], 'tower_name': row[1], 'device_name': row[2], 'ip': row[3], 'ping': "", 'mode': row[4], 'models': row[5], 'os': row[6], 'status': row[7], 'time_active' : row[8], 'area': row[9]})
         if row[7] == "enable":
             ips.insert(0, row[3])
-
-# change status mode for device
-def change_status(target_device, status_mode):
-    cursor = conn.cursor()
-    cursor.execute(f"UPDATE devices SET status = '{status_mode}' WHERE device_name = ('{target_device}')")
-    conn.commit()
-    update_devices()
 
 ############################ Device end #############################
 #####################################################################
@@ -655,7 +642,9 @@ def flask():
                     error = "Select a device or status for device"
                     return render_template('panel.html', error=error, all_data=all_data, username=username,user_list=user_list)
                 else:
-                    change_status(target_device, status_mode)
+                    update_command = update("devices", "status", status_mode, "devies_name", target_device)
+                    update_command.update_sql(conn)
+                    update_devices()
                     error = f"status changes for device {target_device} to {status_mode}"
                     log_page(error)
                     return render_template('panel.html', error=error, all_data=all_data, username=username,user_list=user_list)
