@@ -1,8 +1,12 @@
 from multiprocessing.dummy import Pool as ThreadPool
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 from pythonping import ping
-import mysql.connector, threading, logging, socket, time
+import mysql.connector, threading, logging, socket, time, logging
+import logging, asyncio
+from aiogram import Bot, Dispatcher
+from aiogram.utils import exceptions
 
+API_TOKEN = open("telegram-key.txt", "r").read()
 pool = ThreadPool(3)
 all_data = [[], [1920, 1080], [], [{}]]
 # [all devices] - [settings] - [towers] - [models]
@@ -18,6 +22,9 @@ timeout_list = []
 log_data = []
 user_list = []
 timeout_list = []
+log = logging.getLogger('broadcast')
+bot = Bot(token=API_TOKEN)
+dp = Dispatcher(bot)
 
 try:
     conn = mysql.connector.connect(host='localhost', database='roshan', user='root', password='123456')
@@ -90,9 +97,6 @@ def read_from_sql():
 
 read_from_sql()
 
-#####################################################################
-############################ Log start ############################
-
 def log_page(event):
     log_date_and_time = time.localtime()
     cursor = conn.cursor()
@@ -102,12 +106,6 @@ def log_page(event):
     for row in cursor:
         log_data.append({'id': row[0], 'date': row[1], 'event': row[2], 'operatore': row[3]})
     conn.commit()
-
-#####################################################################
-############################ Log end ############################
-
-#####################################################################
-############################ Tower start ############################
 
 # Update towers list
 def update_towers():
@@ -147,6 +145,7 @@ def update_tower_position(move_data):
         update_towers()
         move_data = []
 
+# check tower name if allready exist
 def check_tower_name(new_tower_name):
     if len(all_data[2]) == 0:
         return False
@@ -156,10 +155,6 @@ def check_tower_name(new_tower_name):
                 return True
             else:
                 return False
-
-############################ Tower end ###############################
-######################################################################
-############################ Device start ############################
 
 # Check ip format
 def ip_format_check(device_ip):
@@ -204,10 +199,6 @@ def update_devices():
         if row[7] == "enable":
             ips.insert(0, row[3])
 
-############################ Device end #############################
-#####################################################################
-############################ Model start ############################
-
 # Add model
 def add_model(new_device_model, new_device_os):
     cursor = conn.cursor()
@@ -217,10 +208,6 @@ def add_model(new_device_model, new_device_os):
     for row in cursor:
         all_data[3][0][row[1]] = row[2]
     conn.commit()
-
-############################ Model end #############################
-####################################################################
-############################ Ping start ############################
 
 def update_time_active(id, status_time_out):
     cursor = conn.cursor()
@@ -294,9 +281,6 @@ def fto_remove(counter):
                     break
             break
 
-############################ Ping end ##############################
-####################################################################
-############################ User start ############################
 def user_register(new_rank, new_firstname, new_lastname, new_username, new_password, users):
     if new_username in users:
         error = f"{new_username} is allready exist"
@@ -326,8 +310,34 @@ def user_check_rank(username_ch, users):
         else:
             return True
 
-############################ User end ###############################
-#####################################################################
+class telegram:
+    async def send_message(user_id: int, text: str, disable_notification: bool = False) -> bool:
+        try:
+            await bot.send_message(user_id, text, disable_notification=disable_notification)
+        except exceptions.BotBlocked:
+            log.error(f"Target [ID:{user_id}]: blocked by user")
+        except exceptions.ChatNotFound:
+            log.error(f"Target [ID:{user_id}]: invalid user ID")
+        except exceptions.RetryAfter as e:
+            log.error(f"Target [ID:{user_id}]: Flood limit is exceeded. Sleep {e.timeout} seconds.")
+            await asyncio.sleep(e.timeout)
+            return await telegram.send_message(user_id, text)  # Recursive call
+        except exceptions.UserDeactivated:
+            log.error(f"Target [ID:{user_id}]: user is deactivated")
+        except exceptions.TelegramAPIError:
+            log.exception(f"Target [ID:{user_id}]: failed")
+        else:
+            log.info(f"Target [ID:{user_id}]: success")
+            return True
+        return False
+
+    async def broadcaster() -> int:
+        user = 689643466
+        try:
+            await telegram.send_message(user, '<b>Hello!</b>')
+            await asyncio.sleep(.05)  # 20 messages per second (Limit: 30 messages per second)
+        except:
+            pass
 
 # start flask server
 def flask():
