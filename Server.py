@@ -1,10 +1,11 @@
 from multiprocessing.dummy import Pool as ThreadPool
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 from pythonping import ping
-import mysql.connector, threading, logging, socket, time, logging
+import mysql.connector, threading, logging, socket, logging, time
 import logging, asyncio
 from aiogram import Bot, Dispatcher
-from aiogram.utils import exceptions
+from aiogram.utils import exceptions, executor
+from datetime import datetime
 
 API_TOKEN = open("telegram-key.txt", "r").read()
 pool = ThreadPool(3)
@@ -22,6 +23,7 @@ timeout_list = []
 log_data = []
 user_list = []
 timeout_list = []
+
 log = logging.getLogger('broadcast')
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
@@ -68,7 +70,7 @@ class delete:
 def read_from_sql():
     cursor.execute('SELECT * FROM devices')
     for row in cursor:
-        all_data[0].append({'id': row[0], 'tower_name': row[1], 'device_name': row[2], 'ip': row[3], 'ping': "", 'mode': row[4], 'models': row[5], 'os': row[6], 'status': row[7], 'time_active' : row[8], 'area': row[9]})
+        all_data[0].append({'id': row[0], 'tower_name': row[1], 'device_name': row[2], 'ip': row[3], 'ping': "", 'mode': row[4], 'models': row[5], 'os': row[6], 'status': row[7], 'time_active' : row[8], 'area': row[9], 'delta_time': ""})
         if row[7] == "enable":
             ips.insert(0, row[3])
         
@@ -209,11 +211,6 @@ def add_model(new_device_model, new_device_os):
         all_data[3][0][row[1]] = row[2]
     conn.commit()
 
-def update_time_active(id, status_time_out):
-    cursor = conn.cursor()
-    cursor.execute(f"UPDATE devices SET time_active = '{status_time_out}' WHERE id = ('{id}')")
-    conn.commit()
-
 # Ping Calc
 def ping_system(ip):
     result = ping(ip, size=1, count=1)
@@ -227,59 +224,80 @@ def replace():
     while counter < len(ping_data):
         finder = next((index for (index, d) in enumerate(all_data[0]) if d["ip"] == ping_data[counter]["ip"]), None)
         if ping_data[counter]["ping"] == "Request timeout":
-            fto_insert(counter, finder)
+            time_sructure.insert(counter, finder)
         else:
             all_data[0][finder]['ping'] = ping_data[counter]["ping"]
-            fto_remove(counter)
+            time_sructure.remove(counter)
         counter = counter + 1
 
-# insert in timeout dict
-def fto_insert(counter, finder):
-    if not timeout_list:
-        tto = time.localtime()
-        tto = f'{tto[3]}{tto[4]}{tto[5]}'
-        timeout_list.append({'ip': ping_data[counter]["ip"], 'time': tto})
-    else:
-        t = 0
-        while True:
-            if len(timeout_list) == t:
-                tto = time.localtime()
-                tto = f'{tto[3]}{tto[4]}{tto[5]}'
-                timeout_list.append({'ip': ping_data[counter]["ip"], 'time': tto})
-                break
-            elif ping_data[counter]['ip'] == timeout_list[t]['ip']:
-                tto = time.localtime()
-                tto = f'{tto[3]}{tto[4]}{tto[5]}'
-                calc_time = int(tto) - (int(timeout_list[t]['time']))
-                if calc_time > 20:
-                    all_data[0][finder]['ping'] = "Request timeout"
-                    if all_data[0][finder]['time_active'] == "":
-                        status_time_out = time.localtime()
-                        status_time_out = f'{status_time_out[0]}/{status_time_out[1]}/{status_time_out[2]} {status_time_out[3]}:{status_time_out[4]}'
-                        all_data[0][finder]['time_active'] = status_time_out
-                        id = all_data[0][finder]['id']
-                        update_time_active(id, status_time_out)
-                break
-            else:
-                t = t + 1
+class time_sructure:
+    def update(id, status_time_out):
+        cursor = conn.cursor()
+        cursor.execute(f"UPDATE devices SET time_active = '{status_time_out}' WHERE id = ('{id}')")
+        conn.commit()
 
-# remove from timeout_list
-def fto_remove(counter):
-    for tol_id, tol in enumerate(timeout_list):
-        if ping_data[counter]['ip'] == timeout_list[tol_id]['ip']:
-            for v in all_data[0]:
-                if v['ip'] == ping_data[counter]['ip']:
-                    id = v['id']
-                    empty = ""
-                    ip = ping_data[counter]['ip']
-                    update_time_active(id, empty)
-            timeout_list.remove(timeout_list[tol_id])
-            # for find time in all_data
-            for id, e in enumerate(all_data[0]):
-                if e['ip'] == ip:
-                    all_data[0][id]['time_active'] = ""
+    def delta_time():
+        for id, data in enumerate(all_data[0]):
+            if data['time_active'] == "":
+                pass
+            else:
+                temp_time = data['time_active'].replace("/", " ").replace(":", " ").split()
+                old_time = datetime(int(temp_time[0]), int(temp_time[1]), int(temp_time[2]), int(temp_time[3]), int(temp_time[4]))
+                real_time = datetime.now()
+                dif = real_time - old_time
+                recap = str(dif).replace(":", " ").split()
+                if len(recap) == 3:
+                    delta_time = f'{recap[0]}:{recap[1]}'
+                    all_data[0][id]['delta_time'] = str(delta_time)
+
+
+    # insert in timeout dict
+    def insert(counter, finder):
+        if not timeout_list:
+            tto = time.localtime()
+            tto = f'{tto[3]}{tto[4]}{tto[5]}'
+            timeout_list.append({'ip': ping_data[counter]["ip"], 'time': tto})
+        else:
+            t = 0
+            while True:
+                if len(timeout_list) == t:
+                    tto = time.localtime()
+                    tto = f'{tto[3]}{tto[4]}{tto[5]}'
+                    timeout_list.append({'ip': ping_data[counter]["ip"], 'time': tto})
                     break
-            break
+                elif ping_data[counter]['ip'] == timeout_list[t]['ip']:
+                    tto = time.localtime()
+                    tto = f'{tto[3]}{tto[4]}{tto[5]}'
+                    calc_time = int(tto) - (int(timeout_list[t]['time']))
+                    if calc_time > 5:
+                        all_data[0][finder]['ping'] = "Request timeout"
+                        if all_data[0][finder]['time_active'] == "":
+                            status_time_out = time.localtime()
+                            status_time_out = f'{status_time_out[0]}/{status_time_out[1]}/{status_time_out[2]} {status_time_out[3]}:{status_time_out[4]}'
+                            all_data[0][finder]['time_active'] = status_time_out
+                            id = all_data[0][finder]['id']
+                            time_sructure.update(id, status_time_out)
+                    break
+                else:
+                    t = t + 1
+
+    # remove from timeout_list
+    def remove(counter):
+        for tol_id, tol in enumerate(timeout_list):
+            if ping_data[counter]['ip'] == timeout_list[tol_id]['ip']:
+                for v in all_data[0]:
+                    if v['ip'] == ping_data[counter]['ip']:
+                        id = v['id']
+                        empty = ""
+                        ip = ping_data[counter]['ip']
+                        time_sructure.update(id, empty)
+                timeout_list.remove(timeout_list[tol_id])
+                # for find time in all_data
+                for id, e in enumerate(all_data[0]):
+                    if e['ip'] == ip:
+                        all_data[0][id]['time_active'] = ""
+                        break
+                break
 
 def user_register(new_rank, new_firstname, new_lastname, new_username, new_password, users):
     if new_username in users:
@@ -321,7 +339,7 @@ class telegram:
         except exceptions.RetryAfter as e:
             log.error(f"Target [ID:{user_id}]: Flood limit is exceeded. Sleep {e.timeout} seconds.")
             await asyncio.sleep(e.timeout)
-            return await telegram.send_message(user_id, text)  # Recursive call
+            return await telegram.send_message(user_id, text)
         except exceptions.UserDeactivated:
             log.error(f"Target [ID:{user_id}]: user is deactivated")
         except exceptions.TelegramAPIError:
@@ -331,11 +349,11 @@ class telegram:
             return True
         return False
 
-    async def broadcaster() -> int:
-        user = 689643466
+    async def broadcaster(alert):
+        user_id = 689643466
         try:
-            await telegram.send_message(user, '<b>Hello!</b>')
-            await asyncio.sleep(.05)  # 20 messages per second (Limit: 30 messages per second)
+            await telegram.send_message(user_id, alert)
+            # await asyncio.sleep(.05)
         except:
             pass
 
@@ -736,4 +754,5 @@ while True:
     time.sleep(dellay)
     results = pool.map(ping_system, ips)
     replace()
+    time_sructure.delta_time()
     ping_data.clear()
