@@ -70,7 +70,7 @@ class delete:
 def read_from_sql():
     cursor.execute('SELECT * FROM devices')
     for row in cursor:
-        all_data[0].append({'id': row[0], 'tower_name': row[1], 'device_name': row[2], 'ip': row[3], 'ping': "", 'mode': row[4], 'models': row[5], 'os': row[6], 'status': row[7], 'time_active' : row[8], 'area': row[9], 'delta_time': ""})
+        all_data[0].append({'id': row[0], 'tower_name': row[1], 'device_name': row[2], 'ip': row[3], 'ping': "", 'mode': row[4], 'models': row[5], 'os': row[6], 'status': row[7], 'time_active' : row[8], 'area': row[9], 'delta_time': "", 'notification': row[10]})
         if row[7] == "enable":
             ips.insert(0, row[3])
         
@@ -245,11 +245,21 @@ class time_sructure:
                 old_time = datetime(int(temp_time[0]), int(temp_time[1]), int(temp_time[2]), int(temp_time[3]), int(temp_time[4]))
                 real_time = datetime.now()
                 dif = real_time - old_time
+                # send telegram msg if device down
+                if round(dif.seconds) >= 2:
+                    if all_data[0][id]['notification'] == "no":
+                        print(all_data[0][id - 1]['notification'])
+                        device_name = data['device_name']
+                        telegram_msg = f'{device_name} is down'
+                        executor.start(dp, telegram.broadcaster(telegram_msg))
+                        all_data[0][id]['notification'] = "yes"
+                        update_command = update("devices", "notification", "yes", "device_name", all_data[0][id]['device_name'])
+                        update_command.update_sql(conn)
+
                 recap = str(dif).replace(":", " ").split()
                 if len(recap) == 3:
                     delta_time = f'{recap[0]}:{recap[1]}'
                     all_data[0][id]['delta_time'] = str(delta_time)
-
 
     # insert in timeout dict
     def insert(counter, finder):
@@ -296,6 +306,13 @@ class time_sructure:
                 for id, e in enumerate(all_data[0]):
                     if e['ip'] == ip:
                         all_data[0][id]['time_active'] = ""
+                        if all_data[0][id]['notification'] == "yes":
+                            all_data[0][id]['notification'] = "no"
+                            device_name = all_data[0][id]['device_name']
+                            telegram_msg = f'{device_name} is up'
+                            executor.start(dp, telegram.broadcaster(telegram_msg))
+                            update_command = update("devices", "notification", "no", "device_name", all_data[0][id]['device_name'])
+                            update_command.update_sql(conn)
                         break
                 break
 
