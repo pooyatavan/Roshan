@@ -1,3 +1,4 @@
+from asyncio import events
 from multiprocessing.dummy import Pool as ThreadPool
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 from pythonping import ping
@@ -249,16 +250,18 @@ class time_sructure:
                 if round(dif.seconds) >= 2:
                     if all_data[0][id]['notification'] == "no":
                         print(all_data[0][id - 1]['notification'])
-                        device_name = data['device_name']
-                        telegram_msg = f'{device_name} is down'
-                        executor.start(dp, telegram.broadcaster(telegram_msg))
+                        msg = telegram(data['device_name'], data['ip'], "Down", data['time_active'])
+                        msg.send_msg()
                         all_data[0][id]['notification'] = "yes"
                         update_command = update("devices", "notification", "yes", "device_name", all_data[0][id]['device_name'])
                         update_command.update_sql(conn)
 
                 recap = str(dif).replace(":", " ").split()
-                if len(recap) == 3:
+                if len(recap) == 3: # for hour
                     delta_time = f'{recap[0]}:{recap[1]}'
+                    all_data[0][id]['delta_time'] = str(delta_time)
+                elif len(recap) == 5: # for days
+                    delta_time = f'{recap[0]} Day {recap[2]}:{recap[3]}'
                     all_data[0][id]['delta_time'] = str(delta_time)
 
     # insert in timeout dict
@@ -308,9 +311,8 @@ class time_sructure:
                         all_data[0][id]['time_active'] = ""
                         if all_data[0][id]['notification'] == "yes":
                             all_data[0][id]['notification'] = "no"
-                            device_name = all_data[0][id]['device_name']
-                            telegram_msg = f'{device_name} is up'
-                            executor.start(dp, telegram.broadcaster(telegram_msg))
+                            msg = telegram(all_data[0][id]['device_name'], all_data[0][id]['ip'], "Up", all_data[0][id]['time_active'])
+                            msg.send_msg()
                             update_command = update("devices", "notification", "no", "device_name", all_data[0][id]['device_name'])
                             update_command.update_sql(conn)
                         break
@@ -346,6 +348,15 @@ def user_check_rank(username_ch, users):
             return True
 
 class telegram:
+    def __init__(self, device_name, ip_address, event, time_active):
+        self.device_name = device_name
+        self.ip_address = ip_address
+        self.time_active = time_active
+        self.event = event
+    
+    def send_msg(self):
+        executor.start(dp, telegram.broadcaster(f'{self.device_name} with IP: {self.ip_address} is {self.event} \r {self.time_active}'))
+
     async def send_message(user_id: int, text: str, disable_notification: bool = False) -> bool:
         try:
             await bot.send_message(user_id, text, disable_notification=disable_notification)
@@ -367,10 +378,10 @@ class telegram:
         return False
 
     async def broadcaster(alert):
-        user_id = 689643466
+        #user_id = 689643466
+        user_id = -1001759721873
         try:
             await telegram.send_message(user_id, alert)
-            # await asyncio.sleep(.05)
         except:
             pass
 
