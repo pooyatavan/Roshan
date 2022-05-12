@@ -13,14 +13,11 @@ SSH(Mikrotik, UBNT), Report
 3. Flask Framework
 4. pythonping
 5. paramiko
+6. aiogram
 # How to install
 1. Download the Source and then extract it.
 2. Import databases to your MySQL server.
 3. Run server.py
 4. Default Username/Password is admin/admin
-# Worked
-[x] Login
-[x] Solar
-[x] Registation
-[x] Panel
-[x] Node movements
+5. # Help
+6. Use Console to make your first username and password
