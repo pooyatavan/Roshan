@@ -1,20 +1,19 @@
-from asyncio import events
 from multiprocessing.dummy import Pool as ThreadPool
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 from pythonping import ping
-import mysql.connector, threading, logging, socket, logging, time
-import logging, asyncio
+import mysql.connector, threading, logging, socket, logging, time, asyncio, configparser
 from aiogram import Bot, Dispatcher
 from aiogram.utils import exceptions, executor
-from datetime import date, datetime
+from datetime import datetime
 
-API_TOKEN = open("telegram-key.txt", "r").read()
-pool = ThreadPool(3)
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+pool = ThreadPool(config[''][''])
 all_data = [[], [1920, 1080], [], [{}]]
 # [all devices] - [settings] - [towers] - [models]
 ips = []
 ping_data = []
-dellay = 4
 move_data = []
 add_temp = []
 users = {}
@@ -26,11 +25,15 @@ user_list = []
 timeout_list = []
 
 log = logging.getLogger('broadcast')
-bot = Bot(token=API_TOKEN)
+bot = Bot(token = config['telegram']['key'])
 dp = Dispatcher(bot)
 
 try:
-    conn = mysql.connector.connect(host='localhost', database='roshan', user='root', password='123456')
+    conn = mysql.connector.connect(host = config['database']['database_host'],
+    database = config['database']['database_name'],
+    user = config['database']['database_username'],
+    password = config['database']['database_password'])
+
     if conn.is_connected():
         db_Info = conn.get_server_info()
         print("Connected to MySQL Server version ", db_Info)
@@ -788,7 +791,7 @@ console_thread.start()
 
 # Loop calc
 while True:
-    time.sleep(dellay)
+    time.sleep(config['calc']['dellay'])
     results = pool.map(ping_system, ips)
     replace()
     time_sructure.delta_time()
