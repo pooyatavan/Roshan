@@ -5,11 +5,31 @@ import mysql.connector, threading, logging, socket, logging, time, asyncio, conf
 from aiogram import Bot, Dispatcher
 from aiogram.utils import exceptions, executor
 from datetime import datetime
+from log.log import get_logger
 
-config = configparser.ConfigParser()
-config.read('config.ini')
+LOG = get_logger(name = "saphemu")
+LOG.info("ROSHAN")
 
-pool = ThreadPool(config[''][''])
+try:
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    LOG.debug("Loading config file successfully")
+    conn = mysql.connector.connect(host = config['database']['database_host'],
+    database = config['database']['database_name'],
+    user = config['database']['database_username'],
+    password = config['database']['database_password'])
+    if conn.is_connected():
+        db_Info = conn.get_server_info()
+        LOG.debug(f"Connected to MySQL Server version {db_Info}")
+        cursor = conn.cursor()
+        cursor.execute("select database();")
+        record = cursor.fetchone()
+        LOG.debug(f"You're connected to database: {record}")
+except:
+    LOG.error("Error while connecting to MySQL")
+
+
+pool = ThreadPool(int(config['settings']['threads']))
 all_data = [[], [1920, 1080], [], [{}]]
 # [all devices] - [settings] - [towers] - [models]
 ips = []
@@ -27,22 +47,6 @@ timeout_list = []
 log = logging.getLogger('broadcast')
 bot = Bot(token = config['telegram']['key'])
 dp = Dispatcher(bot)
-
-try:
-    conn = mysql.connector.connect(host = config['database']['database_host'],
-    database = config['database']['database_name'],
-    user = config['database']['database_username'],
-    password = config['database']['database_password'])
-
-    if conn.is_connected():
-        db_Info = conn.get_server_info()
-        print("Connected to MySQL Server version ", db_Info)
-        cursor = conn.cursor()
-        cursor.execute("select database();")
-        record = cursor.fetchone()
-        print("You're connected to database: ", record)
-except:
-    print("Error while connecting to MySQL")
 
 # Update sql structure
 class update:
@@ -751,13 +755,13 @@ def flask():
 # command console
 def console():
     help_command = [".register [firstname] [lastname] [username] [passsword] [rank 1-3 (1-User | 2-ban | 3-God)]", ".changerank [user target] [rank 1-3 (1-User | 2-Ban | 3-God)]", ".reload [database]"]
-    print("Type .help command name")
+    LOG.info("Type .help command name")
     while True:
         command = input("Command me: ")
         try:
             if command == ".help":
                 for help in help_command:
-                    print(help)
+                    LOG.warning(help)
             else:
                 if command.split()[0] == ".register":
                     if (len(command.split())) == 6:
@@ -772,14 +776,14 @@ def console():
                             update_command.update_sql(conn)
                             user.update()
                         else:
-                            print("rank number is not in range")
+                            LOG.error("rank number is not in range")
                     else:
                         print(".change-rank [user target] [user rank]")
                 if command.split()[0] == ".reload":
                     if command.split()[1] == "devices":
                         device.update()
         except:
-            print('Command does not exist')
+            LOG.error("Command does not exist")
             
 # flask start thread section
 flask_thread = threading.Thread(target=flask)
@@ -791,7 +795,7 @@ console_thread.start()
 
 # Loop calc
 while True:
-    time.sleep(config['calc']['dellay'])
+    time.sleep(int(config['settings']['dellay']))
     results = pool.map(ping_system, ips)
     replace()
     time_sructure.delta_time()
