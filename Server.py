@@ -1,33 +1,71 @@
 from multiprocessing.dummy import Pool as ThreadPool
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 from pythonping import ping
-import mysql.connector, threading, logging, socket, logging, time, asyncio, configparser
+import mysql.connector, threading, logging, socket, time, asyncio, configparser, paramiko, enum, os
 from aiogram import Bot, Dispatcher
 from aiogram.utils import exceptions, executor
 from datetime import datetime
-from log.log import get_logger
+from waitress import serve
 
-LOG = get_logger(name = "saphemu")
+os.system("cls")
+time_format = "%H:%M:%S"
+
+class method_list(enum.Enum):
+    green =  '\u001b[32;1m'
+    cyan =  '\x1b[36m'
+    red = '\x1b[31m'
+    magenta = '\u001b[35m'
+
+    info =  green
+    debug =  cyan
+    warning = red
+    error = red
+    help = magenta
+
+class Log:
+    def __init__(self):
+        now = datetime.now()
+        self.current_time = now.strftime(time_format)
+
+    def info(self, msg_print):
+        print(f"{method_list.info.value} {self.current_time} INFO {msg_print}")
+
+    def warning(self, msg_print):
+        print(f"{method_list.warning.value} {self.current_time} WARNING {msg_print}")
+
+    def error(self, msg_print):
+        print(f"{method_list.warning.value} {self.current_time} ERROR {msg_print}")
+
+    def help(self, msg_print):
+        print(f"{method_list.help.value} {self.current_time} ERROR {msg_print}")
+
+LOG = Log()
 LOG.info("ROSHAN")
 
 try:
     config = configparser.ConfigParser()
     config.read('config.ini')
-    LOG.debug("Loading config file successfully")
+    LOG.info("Loading config file successfully")
     conn = mysql.connector.connect(host = config['database']['database_host'],
     database = config['database']['database_name'],
     user = config['database']['database_username'],
     password = config['database']['database_password'])
     if conn.is_connected():
         db_Info = conn.get_server_info()
-        LOG.debug(f"Connected to MySQL Server version {db_Info}")
+        LOG.info(f"Connected to MySQL Server version {db_Info}")
         cursor = conn.cursor()
         cursor.execute("select database();")
         record = cursor.fetchone()
-        LOG.debug(f"You're connected to database: {record}")
+        LOG.info(f"You're connected to database: {record}")
+    if config['telegram']['active'] == "yes":
+        log = logging.getLogger('broadcast')
+        bot = Bot(token = config['telegram']['key'])
+        dp = Dispatcher(bot)
+        LOG.info("Telegram bot is running")
+    else:
+        LOG.info("Telegram bot is disable")
 except:
     LOG.error("Error while connecting to MySQL")
-
 
 pool = ThreadPool(int(config['settings']['threads']))
 all_data = [[], [1920, 1080], [], [{}]]
@@ -43,36 +81,6 @@ timeout_list = []
 log_data = []
 user_list = []
 timeout_list = []
-
-log = logging.getLogger('broadcast')
-bot = Bot(token = config['telegram']['key'])
-dp = Dispatcher(bot)
-
-# Update sql structure
-class update:
-    def __init__(self, table_name, table_set, new_variable, table_variable_where, target_variable):
-        self.table_name = table_name
-        self.table_set = table_set
-        self.new_variable = new_variable
-        self.table_variable_where = table_variable_where
-        self.target_variable = target_variable
-    
-    def update_sql(self, conn):
-        cursor = conn.cursor()
-        cursor.execute(f"UPDATE {self.table_name} SET {self.table_set} = '{self.new_variable}' WHERE {self.table_variable_where} = ('{self.target_variable}')")
-        conn.commit()
-
-# Delete sql structure
-class delete:
-    def __init__(self, from_table, where_field, target_name):
-        self.from_table = from_table
-        self.where_field = where_field
-        self.target_field = target_name
-    
-    def delete_sql(self, conn):
-        cursor = conn.cursor()
-        cursor.execute(f"DELETE FROM {self.from_table} WHERE {self.where_field} = '{self.target_field}'")
-        conn.commit()
 
 # Read and make a dic from sql
 def read_from_sql():
@@ -106,6 +114,32 @@ def read_from_sql():
     log.setLevel(logging.ERROR)
 
 read_from_sql()
+
+# Update sql structure
+class update:
+    def __init__(self, table_name, table_set, new_variable, table_variable_where, target_variable):
+        self.table_name = table_name
+        self.table_set = table_set
+        self.new_variable = new_variable
+        self.table_variable_where = table_variable_where
+        self.target_variable = target_variable
+    
+    def update_sql(self, conn):
+        cursor = conn.cursor()
+        cursor.execute(f"UPDATE {self.table_name} SET {self.table_set} = '{self.new_variable}' WHERE {self.table_variable_where} = ('{self.target_variable}')")
+        conn.commit()
+
+# Delete sql structure
+class delete:
+    def __init__(self, from_table, where_field, target_name):
+        self.from_table = from_table
+        self.where_field = where_field
+        self.target_field = target_name
+    
+    def delete_sql(self, conn):
+        cursor = conn.cursor()
+        cursor.execute(f"DELETE FROM {self.from_table} WHERE {self.where_field} = '{self.target_field}'")
+        conn.commit()
 
 class log_system:
     def __init__(self, event, user):
@@ -156,7 +190,7 @@ class tower:
             cursor.execute(f" UPDATE towers SET top_pos = '{tower_position.get('top')}', left_pos = '{tower_position.get('left')}' WHERE Id = {tower_position.get('id')} ")
             conn.commit()
             tower.update()
-            move_data = []
+            move_data.clear()
 
     def check(new_tower_name):
         if len(all_data[2]) == 0:
@@ -254,8 +288,9 @@ class time_sructure:
                 if round(dif.seconds) >= 2:
                     if all_data[0][id]['notification'] == "no":
                         print(all_data[0][id - 1]['notification'])
-                        msg = telegram(data['device_name'], data['ip'], "Down", data['time_active'])
-                        msg.send_msg()
+                        if config['telegram']['active'] == "yes":
+                            msg = telegram(data['device_name'], data['ip'], "Down", data['time_active'])
+                            msg.send_msg()
                         all_data[0][id]['notification'] = "yes"
                         update_command = update("devices", "notification", "yes", "device_name", all_data[0][id]['device_name'])
                         update_command.update_sql(conn)
@@ -315,8 +350,9 @@ class time_sructure:
                         all_data[0][id]['time_active'] = ""
                         if all_data[0][id]['notification'] == "yes":
                             all_data[0][id]['notification'] = "no"
-                            msg = telegram(all_data[0][id]['device_name'], all_data[0][id]['ip'], "Up", all_data[0][id]['time_active'])
-                            msg.send_msg()
+                            if config['telegram']['active'] == "yes":
+                                msg = telegram(all_data[0][id]['device_name'], all_data[0][id]['ip'], "Up", all_data[0][id]['time_active'])
+                                msg.send_msg()
                             update_command = update("devices", "notification", "no", "device_name", all_data[0][id]['device_name'])
                             update_command.update_sql(conn)
                         break
@@ -383,12 +419,33 @@ class telegram:
         return False
 
     async def broadcaster(alert):
-        #user_id = 689643466
         user_id = -1001759721873
         try:
             await telegram.send_message(user_id, alert)
         except:
             pass
+
+#ssh part
+class ssh_ins(threading.Thread):
+    def __init__(self, ip_ssh, port_ssh, ssh_username, ssh_password):
+        self.ip_ssh = ip_ssh
+        self.port_ssh = port_ssh
+        self.ssh_username = ssh_username
+        self.ssh_password = ssh_password
+
+    def perform(self):
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        try:
+            ssh.connect(self.ip_ssh, self.port_ssh, self.ssh_username, self.ssh_password)
+        except:
+            pass
+        while True:
+            time.sleep(5)
+            command_input = input("command me: ")
+            stdin, stdout, stderr = ssh.exec_command(command_input)
+            ssh_resault = stdout.read().decode('utf-8')
+            print(ssh_resault)
 
 # start flask server
 def flask():
@@ -491,6 +548,9 @@ def flask():
     @app.route("/ssh", methods=['POST', 'GET'])
     def ssh():
         if "username" in session:
+            # test = ssh_ins("192.168.3.1", 22, "test", "test")
+            # x = threading.Thread(target=test.perform)
+            # x.start()
             return render_template("ssh.html")
         else:
             return redirect(url_for('login'))
@@ -749,27 +809,35 @@ def flask():
                 return redirect(url_for('login'))
 
     if __name__ == '__main__':
-        from waitress import serve
-        serve(app, host="192.168.3.20", port=80)
+        logging.getLogger("waitress.queue").setLevel(logging.ERROR)
+        serve(app, host=config['web']['ip'], port=config['web']['port'])
+
+def thread(func, daemon=True):
+    thread = threading.Thread(target=func)
+    thread.daemon = daemon
+    thread.start()
+    return thread
 
 # command console
 def console():
-    help_command = [".register [firstname] [lastname] [username] [passsword] [rank 1-3 (1-User | 2-ban | 3-God)]", ".changerank [user target] [rank 1-3 (1-User | 2-Ban | 3-God)]", ".reload [database]"]
-    LOG.info("Type .help command name")
+    help_command = ["register [firstname] [lastname] [username] [passsword] [rank 1-3 (1-User | 2-ban | 3-God)]",
+    "changerank [user target] [rank 1-3 (1-User | 2-Ban | 3-God)]",
+    "reload [database]"]
+    LOG.help("Type help command name")
     while True:
         command = input("Command me: ")
         try:
-            if command == ".help":
+            if command == "help":
                 for help in help_command:
-                    LOG.warning(help)
+                    LOG.help(help)
             else:
-                if command.split()[0] == ".register":
+                if command.split()[0] == "register":
                     if (len(command.split())) == 6:
                         print(user.register(command.split()[5], command.split()[1], command.split()[2], command.split()[3], command.split()[4], users))
                         user.update()
                     else:
-                        print(".register [firstname] [lastname] [username] [passsword] [rank 1-3]")
-                if command.split()[0] == ".changerank":
+                        print("register [firstname] [lastname] [username] [passsword] [rank 1-3]")
+                if command.split()[0] == "changerank":
                     if (len(command.split())) == 3:
                         if int(command.split()[2]) in range(1, 4, 1):
                             update_command = update("users", "rank_user", command.split()[2], "username", command.split()[1])
@@ -778,20 +846,21 @@ def console():
                         else:
                             LOG.error("rank number is not in range")
                     else:
-                        print(".change-rank [user target] [user rank]")
+                        print("change-rank [user target] [user rank]")
                 if command.split()[0] == ".reload":
                     if command.split()[1] == "devices":
                         device.update()
         except:
             LOG.error("Command does not exist")
-            
-# flask start thread section
-flask_thread = threading.Thread(target=flask)
-flask_thread.start()
 
-# Console Command thread
-console_thread = threading.Thread(target=console)
-console_thread.start()
+thread(flask)
+LOG.info("Flask thread started")
+
+if config['settings']['console'] == 'yes':
+    LOG.info("Console thread started")
+    thread(console)
+else:
+    LOG.info("Console disabled in config file")
 
 # Loop calc
 while True:
